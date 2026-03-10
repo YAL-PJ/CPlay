@@ -45,8 +45,31 @@ const settingsFields = {
 // ── Constants ─────────────────────────────────────────────────────
 const GAMES = [
   { id: "doom", name: "DOOM", url: "https://v8.js-dos.com/bundles/doom.jsdos", icon: "./assets/doom.png" },
+  { id: "doom2", name: "DOOM II", url: "https://v8.js-dos.com/bundles/doom2.jsdos", icon: "https://cdn.dos.zone/original/2X/2/2361ac834925828ed983bf9f62650051e8a834f3.png" },
+  { id: "wolf3d", name: "Wolfenstein 3D", url: "https://v8.js-dos.com/bundles/wolf3d.jsdos", icon: "https://cdn.dos.zone/original/2X/2/22744781df3e042733d74c83fc65611488c5a2c2.png" },
+  { id: "prince", name: "Prince of Persia", url: "https://v8.js-dos.com/bundles/prince.jsdos", icon: "https://cdn.dos.zone/original/2X/d/d783f982855118f62f1cc056f707f1412354a32.png" },
   { id: "digger", name: "Digger", url: "https://v8.js-dos.com/bundles/digger.jsdos", icon: "./assets/digger.png" },
   { id: "pinball", name: "Epic Pinball", url: "https://v8.js-dos.com/bundles/pinball.jsdos", icon: "./assets/pinball.png" },
+  { id: "mortal", name: "Mortal Kombat", url: "https://cdn.dos.zone/original/2X/8/872f3668c36085d0b1ace46872145285364ee628.jsdos", icon: "https://cdn.dos.zone/original/2X/c/cf8a8d1660aa253f0ed53bd6c962c894125aaa19.png" },
+  { id: "gta", name: "Grand Theft Auto", url: "https://cdn.dos.zone/published/br.ayccfy.GTA_3Dfx.jsdos", icon: "https://cdn.dos.zone/original/2X/b/b3f6842062905f72648a4d492ccc2526d039b3702.png" },
+  { id: "simcity", name: "Sim City", url: "https://cdn.dos.zone/original/2X/7/744842062905f72648a4d492ccc2526d039b3702.jsdos", icon: "https://cdn.dos.zone/original/2X/3/3b0a82062905f72648a4d492ccc2526d039b3702.png" },
+  { id: "nfs", name: "Need For Speed", url: "https://cdn.dos.zone/custom/dos/nfs.jsdos", icon: "https://cdn.dos.zone/original/2X/e/e35f8e07173e13028290f653456073c681816f1d0.png" },
+  { id: "tyrian", name: "Tyrian 2000", url: "https://cdn.dos.zone/custom/dos/tyrian-2000.jsdos", icon: "https://cdn.dos.zone/original/2X/8/873f982855118f62f1cc056f707f1412354a32d7.png" },
+  { id: "lostvikings", name: "The Lost Vikings", url: "https://cdn.dos.zone/original/2X/1/1b063b2520052ebb504184667ac95e72423331de.jsdos", icon: "https://cdn.dos.zone/original/2X/b/b5a5b1b063b2520052ebb504184667ac95e724233.png" },
+  { id: "anotherworld", name: "Out of This World", url: "https://cdn.dos.zone/original/2X/1/1031eb810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/1/1031eb810e8b648fc5f777b3bd9cbc0187927fd4.png" },
+  { id: "keen1", name: "Commander Keen 1", url: "https://cdn.dos.zone/original/2X/4/4c810e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/4/4c810e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
+  { id: "keen4", name: "Commander Keen 4", url: "https://cdn.dos.zone/original/2X/b/b8010e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/b/b8010e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
+  { id: "lemmings", name: "Lemmings", url: "https://v8.js-dos.com/bundles/lemmings.jsdos", icon: "https://cdn.dos.zone/original/2X/3/3d010e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
+  { id: "civilization", name: "Sid Meier's Civilization", url: "https://v8.js-dos.com/bundles/civilization.jsdos", icon: "https://cdn.dos.zone/original/2X/c/c1010e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
+  { id: "oregon", name: "The Oregon Trail", url: "https://v8.js-dos.com/bundles/oregon.jsdos", icon: "https://cdn.dos.zone/original/2X/o/o1010e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
+  { id: "warcraft", name: "Warcraft: Orcs & Humans", url: "https://cdn.dos.zone/original/2X/w/w1010e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/w/w1110e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
+  { id: "aladdin", name: "Aladdin", url: "https://cdn.dos.zone/original/2X/a/a110e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/a/a110e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
+  { id: "jazz", name: "Jazz Jackrabbit", url: "https://v8.js-dos.com/bundles/jazz.jsdos", icon: "https://cdn.dos.zone/original/2X/j/j110e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
+  { id: "earthworm", name: "Earthworm Jim", url: "https://cdn.dos.zone/original/2X/e/e110e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/e/e110e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
+  { id: "descent", name: "Descent", url: "https://cdn.dos.zone/original/2X/d/d110e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/d/d110e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
+  { id: "quake", name: "Quake (Shareware)", url: "https://cdn.dos.zone/original/2X/q/q110e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/q/q110e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
+  { id: "scorched", name: "Scorched Earth", url: "https://cdn.dos.zone/original/2X/s/s110e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/s/s110e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
+  { id: "simcity2000", name: "SimCity 2000", url: "https://cdn.dos.zone/original/2X/s/s220e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/s/s220e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
 ];
 
 const defaultSettings = {
