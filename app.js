@@ -27,7 +27,7 @@ const GAMES = [
   {
     id: "doom",
     name: "DOOM (Shareware)",
-    url: "https://cdn.dos.zone/custom/dos/doom.jsdos",
+    url: "https://v8.js-dos.com/bundles/doom.jsdos",
     icon: "./assets/doom.png"
   },
   {
@@ -162,6 +162,8 @@ async function stopCurrent() {
       console.log("Stopping emulator...");
       if (typeof ci.exit === "function") {
         await ci.exit();
+      } else if (typeof ci.stop === "function") {
+        await ci.stop();
       }
     } catch (e) {
       console.warn("Error during emulator exit:", e);
@@ -219,8 +221,30 @@ prebuffer=40
 `;
 }
 
+function hasLifecycleHandle(handle) {
+  return !!handle && (typeof handle.exit === "function" || typeof handle.stop === "function");
+}
+
+async function bootstrapDosInstance(dosOptions, bundleUrl) {
+  const dosHandle = await Promise.resolve(window.Dos(playerHost, dosOptions));
+  if (!dosHandle) {
+    throw new Error("Dos() returned no handle");
+  }
+
+  if (typeof dosHandle.run === "function") {
+    console.log("Handle is a legacy Player, invoking .run(bundle)...");
+    return Promise.resolve(dosHandle.run(bundleUrl));
+  }
+
+  console.log("Handle is a running player instance (no .run).");
+  return dosHandle;
+}
+
 async function startDos(bundleUrl) {
-  if (startingLock) return;
+  if (startingLock) {
+    setStatus("System busy: emulator is already starting.", "error");
+    return false;
+  }
   startingLock = true;
 
   try {
@@ -233,7 +257,6 @@ async function startDos(bundleUrl) {
     console.log("Loading bundle:", bundleUrl);
 
     try {
-      // Configuration
       const conf = buildDosboxConf();
       console.log("System Config:", conf);
 
@@ -242,50 +265,52 @@ async function startDos(bundleUrl) {
       }
 
       console.log("Starting emulator bootstrap...");
-      // Try the most direct all-in-one call first
-      const startResult = window.Dos(playerHost, {
+
+      const primaryOptions = {
         url: bundleUrl,
         dosboxConf: conf,
         kiosk: true,
-      });
+      };
+      ci = await bootstrapDosInstance(primaryOptions, bundleUrl);
 
-      // Handle both Promise and direct object returns
-      const handle = (startResult instanceof Promise) ? await startResult : startResult;
-
-      // Determine if we got a CommandInstance (running) or a Player (needs .run)
-      if (handle && typeof handle.run === "function") {
-        console.log("Handle is a Player, calling .run()...");
-        ci = await handle.run(bundleUrl);
-      } else {
-        console.log("Handle is likely the CommandInstance already...");
-        ci = handle;
+      if (!hasLifecycleHandle(ci)) {
+        console.warn("Primary bootstrap returned unknown handle shape; trying legacy bootstrap fallback...");
+        const fallbackOptions = {
+          dosboxConf: conf,
+          kiosk: true,
+        };
+        ci = await bootstrapDosInstance(fallbackOptions, bundleUrl);
       }
 
-      // Check for successful CI
-      if (!ci || typeof ci.exit !== "function") {
-        throw new Error("Initialization failed to produce a valid CommandInstance");
+      if (!hasLifecycleHandle(ci)) {
+        const keys = ci && typeof ci === "object" ? Object.keys(ci).slice(0, 8).join(", ") : "none";
+        throw new Error(`Initialization returned unsupported handle shape (keys: ${keys})`);
       }
 
-      // Listen for exit events
-      if (ci.events) {
+      if (ci && typeof ci.events === "function") {
         ci.events().onTerminate(() => {
           console.log("Emulator terminated via CI events.");
           stopCurrent();
         });
       }
-
     } catch (err) {
       console.error("Emulator Boot Failure:", err);
       hideLoading();
-      setStatus(`System Error: ${err.message || "Unknown"}`, "error");
+      const message = String(err?.message || err || "Unknown");
+      if (/CORS|Failed to fetch|NetworkError|ERR_FAILED|blocked by CORS policy/i.test(message)) {
+        setStatus("System Error: Bundle URL blocked by CORS or network policy.", "error");
+      } else {
+        setStatus(`System Error: ${message}`, "error");
+      }
       setRunning(false);
-      return;
+      return false;
     }
 
     currentBundle = bundleUrl;
     hideLoading();
     setStatus("System Ready - Drive A:", "ok");
     setRunning(true);
+    return true;
   } finally {
     startingLock = false;
   }
@@ -311,10 +336,14 @@ async function loadUserBundle(file) {
   setStatus(`Loading ${file.name}\u2026`, "");
 
   // stopCurrent inside startDos will revoke the old objectUrl (if any).
-  await startDos(newUrl);
+  const started = await startDos(newUrl);
 
-  // Now that the old URL has been revoked by stopCurrent, track the new one.
-  objectUrl = newUrl;
+  // Track blob URLs only when boot succeeded. Otherwise revoke immediately.
+  if (started) {
+    objectUrl = newUrl;
+  } else {
+    URL.revokeObjectURL(newUrl);
+  }
 }
 
 // ── URL normalization ─────────────────────────────────────────────
@@ -421,9 +450,9 @@ async function loadBundleFromUrl(rawUrl) {
 
     showLoading("Fetching bundle\u2026");
     setStatus("Loading bundle from URL\u2026", "");
-    await startDos(finalUrl);
+    const started = await startDos(finalUrl);
 
-    if (transformNote) setStatus(`Running \u2014 ${transformNote}`, "ok");
+    if (started && transformNote) setStatus(`Running \u2014 ${transformNote}`, "ok");
   } catch (err) {
     hideLoading();
     setStatus(`Could not load URL: ${err.message}. Try downloading the file and uploading it here.`, "error");
@@ -509,13 +538,24 @@ async function saveGameState() {
     return;
   }
 
-  // Try js-dos persist API
+  // Try js-dos persist API (legacy).
+  // On newer v8 builds, the player exposes .save(), but it may return a boolean
+  // and not a portable save-state blob, so we only accept binary payloads.
   let stateData = null;
   if (typeof ci.persist === "function") {
     try {
       stateData = await ci.persist();
     } catch {
       // persist not supported for this bundle
+    }
+  } else if (typeof ci.save === "function") {
+    try {
+      const saved = await ci.save();
+      if (saved instanceof Uint8Array || saved instanceof ArrayBuffer) {
+        stateData = saved;
+      }
+    } catch {
+      // save may not be available for this backend
     }
   }
 
@@ -580,7 +620,12 @@ async function loadGameState(id) {
     const blob = new Blob([stateBytes], { type: "application/octet-stream" });
     const blobUrl = URL.createObjectURL(blob);
 
-    await startDos(blobUrl);
+    const started = await startDos(blobUrl);
+    if (!started) {
+      URL.revokeObjectURL(blobUrl);
+      return;
+    }
+
     objectUrl = blobUrl; // track for cleanup
     currentBundle = save.bundleUrl;
     setStatus(`Restored "${save.name}"`, "ok");
