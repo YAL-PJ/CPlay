@@ -8,9 +8,11 @@ const bundleUrlInput = document.getElementById("bundleUrl");
 const loadUrlBtn    = document.getElementById("loadUrlBtn");
 const fullscreenBtn = document.getElementById("fullscreenBtn");
 const stopBtn       = document.getElementById("stopBtn");
+const saveBtn       = document.getElementById("saveBtn");
 const playerShell   = document.getElementById("playerShell");
 const playerHost    = document.getElementById("dos-player");
 const emptyState    = document.getElementById("emptyState");
+const savesList     = document.getElementById("savesList");
 
 const settingsFields = {
   cycles:    document.getElementById("cycles"),
@@ -34,9 +36,11 @@ const defaultSettings = {
 };
 
 // ── State ─────────────────────────────────────────────────────────
-let ci        = null;
-let objectUrl  = null;
-let isRunning  = false;
+let ci            = null;
+let objectUrl     = null;
+let isRunning     = false;
+let startingLock  = false;   // prevents overlapping startDos calls
+let currentBundle = "";      // tracks what bundle is loaded (for save metadata)
 
 // ── Helpers ───────────────────────────────────────────────────────
 function setStatus(message, type = "ok") {
@@ -53,7 +57,12 @@ function showLoading(message) {
   const overlay = document.createElement("div");
   overlay.className = "loading-overlay";
   overlay.id = "loadingOverlay";
-  overlay.innerHTML = `<div class="spinner"></div><p>${escapeHtml(message)}</p>`;
+  const spinner = document.createElement("div");
+  spinner.className = "spinner";
+  const p = document.createElement("p");
+  p.textContent = message;
+  overlay.appendChild(spinner);
+  overlay.appendChild(p);
   playerShell.appendChild(overlay);
 }
 
@@ -61,30 +70,39 @@ function hideLoading() {
   document.getElementById("loadingOverlay")?.remove();
 }
 
-function escapeHtml(str) {
-  const d = document.createElement("div");
-  d.textContent = str;
-  return d.innerHTML;
-}
-
 function setRunning(running) {
   isRunning = running;
   stopBtn.hidden = !running;
+  saveBtn.hidden = !running;
   showEmptyState(!running && !ci);
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
 }
 
 // ── Settings ──────────────────────────────────────────────────────
 function readSettings() {
-  const stored = localStorage.getItem("cplay.settings");
-  return stored ? { ...defaultSettings, ...JSON.parse(stored) } : { ...defaultSettings };
+  try {
+    const stored = localStorage.getItem("cplay.settings");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return { ...defaultSettings, ...parsed };
+    }
+  } catch {
+    localStorage.removeItem("cplay.settings");
+  }
+  return { ...defaultSettings };
 }
 
 function persistSettings() {
   const value = {
-    cycles:    Number(settingsFields.cycles.value) || defaultSettings.cycles,
-    memsize:   Number(settingsFields.memsize.value) || defaultSettings.memsize,
-    sound:     settingsFields.sound.value,
-    themeTint: settingsFields.themeTint.value,
+    cycles:    clamp(Number(settingsFields.cycles.value) || defaultSettings.cycles, 500, 50000),
+    memsize:   clamp(Number(settingsFields.memsize.value) || defaultSettings.memsize, 8, 64),
+    sound:     settingsFields.sound.value === "off" ? "off" : "on",
+    themeTint: ["amber", "green", "ice"].includes(settingsFields.themeTint.value)
+      ? settingsFields.themeTint.value
+      : "amber",
   };
   localStorage.setItem("cplay.settings", JSON.stringify(value));
   document.body.dataset.tint = value.themeTint;
@@ -149,35 +167,43 @@ prebuffer=40
 }
 
 async function startDos(bundleUrl) {
-  await stopCurrent();
-  showEmptyState(false);
-  showLoading("Starting emulator\u2026");
-  setStatus("Starting emulator\u2026", "");
-
-  const conf = buildDosboxConf();
+  if (startingLock) return;
+  startingLock = true;
 
   try {
-    ci = await window.Dos(playerHost, {
-      url: bundleUrl,
-      autoStart: true,
-      kiosk: true,
-      dosboxConf: conf,
-    });
-  } catch {
-    try {
-      ci = await window.Dos(playerHost, { kiosk: true, dosboxConf: conf });
-      if (ci?.run) await ci.run(bundleUrl);
-    } catch (inner) {
-      hideLoading();
-      setStatus(`Emulator failed: ${inner.message || "unknown error"}`, "error");
-      setRunning(false);
-      return;
-    }
-  }
+    await stopCurrent();
+    showEmptyState(false);
+    showLoading("Starting emulator\u2026");
+    setStatus("Starting emulator\u2026", "");
 
-  hideLoading();
-  setStatus("Running \u2014 Ctrl+F10 to release mouse", "ok");
-  setRunning(true);
+    const conf = buildDosboxConf();
+
+    try {
+      ci = await window.Dos(playerHost, {
+        url: bundleUrl,
+        autoStart: true,
+        kiosk: true,
+        dosboxConf: conf,
+      });
+    } catch {
+      try {
+        ci = await window.Dos(playerHost, { kiosk: true, dosboxConf: conf });
+        if (ci?.run) await ci.run(bundleUrl);
+      } catch (inner) {
+        hideLoading();
+        setStatus(`Emulator failed: ${inner.message || "unknown error"}`, "error");
+        setRunning(false);
+        return;
+      }
+    }
+
+    currentBundle = bundleUrl;
+    hideLoading();
+    setStatus("Running \u2014 Ctrl+F10 to release mouse", "ok");
+    setRunning(true);
+  } finally {
+    startingLock = false;
+  }
 }
 
 // ── File loading ──────────────────────────────────────────────────
@@ -190,10 +216,20 @@ async function loadUserBundle(file) {
     return;
   }
 
-  objectUrl = URL.createObjectURL(file);
+  // Create the blob URL, but stash the old one for cleanup.
+  // stopCurrent (called inside startDos) revokes `objectUrl`, so we must
+  // ensure the *previous* URL is still in `objectUrl` when stop runs,
+  // and only assign the *new* URL afterwards.
+  const newUrl = URL.createObjectURL(file);
+
   showLoading(`Loading ${file.name}\u2026`);
   setStatus(`Loading ${file.name}\u2026`, "");
-  await startDos(objectUrl);
+
+  // stopCurrent inside startDos will revoke the old objectUrl (if any).
+  await startDos(newUrl);
+
+  // Now that the old URL has been revoked by stopCurrent, track the new one.
+  objectUrl = newUrl;
 }
 
 // ── URL normalization ─────────────────────────────────────────────
@@ -210,7 +246,6 @@ function normalizeGithubUrl(urlValue) {
       return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${rest.join("/")}`;
     }
 
-    // Bare repo URLs are handled by resolveGithubRepoArchive — don't guess the branch here
     return urlValue;
   } catch {
     return urlValue;
@@ -246,24 +281,28 @@ function transformCloudDriveUrl(urlValue) {
 }
 
 async function resolveGithubRepoArchive(urlValue) {
-  const url   = new URL(urlValue);
-  const parts = url.pathname.split("/").filter(Boolean);
-
-  if (url.hostname !== "github.com" || parts.length !== 2) {
-    return normalizeGithubUrl(urlValue);
-  }
-
-  const [owner, repo] = parts;
-  const api = `https://api.github.com/repos/${owner}/${repo}`;
-
   try {
-    const res = await fetch(api, { headers: { Accept: "application/vnd.github+json" } });
-    if (!res.ok) throw new Error("API error");
-    const data   = await res.json();
-    const branch = data.default_branch || "main";
-    return `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/${branch}`;
+    const url   = new URL(urlValue);
+    const parts = url.pathname.split("/").filter(Boolean);
+
+    if (url.hostname !== "github.com" || parts.length !== 2) {
+      return normalizeGithubUrl(urlValue);
+    }
+
+    const [owner, repo] = parts;
+    const api = `https://api.github.com/repos/${owner}/${repo}`;
+
+    try {
+      const res = await fetch(api, { headers: { Accept: "application/vnd.github+json" } });
+      if (!res.ok) throw new Error("API error");
+      const data   = await res.json();
+      const branch = data.default_branch || "main";
+      return `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/${branch}`;
+    } catch {
+      return `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/main`;
+    }
   } catch {
-    return `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/main`;
+    return urlValue;
   }
 }
 
@@ -284,7 +323,6 @@ async function loadBundleFromUrl(rawUrl) {
   let transformNote  = "";
 
   try {
-    // GitHub repo → archive
     if (/^https:\/\/github\.com\/[^/]+\/[^/]+\/?$/i.test(typedUrl)) {
       finalUrl      = await resolveGithubRepoArchive(typedUrl);
       transformNote = "Resolved GitHub repo to archive.";
@@ -292,7 +330,6 @@ async function loadBundleFromUrl(rawUrl) {
       finalUrl = normalizeGithubUrl(typedUrl);
     }
 
-    // Cloud drive transforms
     const cloud   = transformCloudDriveUrl(finalUrl);
     finalUrl      = cloud.finalUrl;
     transformNote = transformNote || cloud.note;
@@ -305,6 +342,254 @@ async function loadBundleFromUrl(rawUrl) {
   } catch (err) {
     hideLoading();
     setStatus(`Could not load URL: ${err.message}. Try downloading the file and uploading it here.`, "error");
+  }
+}
+
+// ── Save / Load system (IndexedDB) ───────────────────────────────
+const DB_NAME    = "cplay-saves";
+const DB_VERSION = 1;
+const STORE_NAME = "saves";
+
+function openSavesDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: "id" });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+function dbTransaction(mode, fn) {
+  return openSavesDB().then(db => {
+    return new Promise((resolve, reject) => {
+      const tx    = db.transaction(STORE_NAME, mode);
+      const store = tx.objectStore(STORE_NAME);
+      fn(store, resolve, reject);
+      tx.onerror = () => reject(tx.error);
+    });
+  });
+}
+
+function getAllSaves() {
+  return dbTransaction("readonly", (store, resolve) => {
+    const req = store.getAll();
+    req.onsuccess = () => {
+      const saves = req.result || [];
+      saves.sort((a, b) => b.timestamp - a.timestamp);
+      resolve(saves);
+    };
+  });
+}
+
+function putSave(save) {
+  return dbTransaction("readwrite", (store, resolve) => {
+    const req = store.put(save);
+    req.onsuccess = () => resolve();
+  });
+}
+
+function deleteSave(id) {
+  return dbTransaction("readwrite", (store, resolve) => {
+    const req = store.delete(id);
+    req.onsuccess = () => resolve();
+  });
+}
+
+// Capture a tiny screenshot from the dos-player canvas (if available)
+function captureScreenshot() {
+  try {
+    const canvas = playerHost.querySelector("canvas");
+    if (!canvas) return null;
+    // Scale down to thumbnail
+    const thumb = document.createElement("canvas");
+    const scale = 120 / Math.max(canvas.width, 1);
+    thumb.width  = Math.round(canvas.width * scale);
+    thumb.height = Math.round(canvas.height * scale);
+    const ctx = thumb.getContext("2d");
+    ctx.drawImage(canvas, 0, 0, thumb.width, thumb.height);
+    return thumb.toDataURL("image/png", 0.7);
+  } catch {
+    return null;
+  }
+}
+
+async function saveGameState() {
+  if (!ci || !isRunning) {
+    setStatus("No game running to save.", "error");
+    return;
+  }
+
+  // Try js-dos persist API
+  let stateData = null;
+  if (typeof ci.persist === "function") {
+    try {
+      stateData = await ci.persist();
+    } catch {
+      // persist not supported for this bundle
+    }
+  }
+
+  if (!stateData) {
+    setStatus("Save not available \u2014 this bundle may not support state saves.", "error");
+    return;
+  }
+
+  const screenshot = captureScreenshot();
+  const id = `save-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+  // Derive a friendly name from the bundle URL
+  let gameName = "Unknown game";
+  try {
+    const segments = currentBundle.split("/").filter(Boolean);
+    const last = segments[segments.length - 1] || "";
+    gameName = decodeURIComponent(last)
+      .replace(/\.(jsdos|zip)$/i, "")
+      .replace(/[_-]/g, " ")
+      .slice(0, 40) || "Unknown game";
+  } catch { /* keep default */ }
+
+  const save = {
+    id,
+    name: gameName,
+    timestamp: Date.now(),
+    bundleUrl: currentBundle,
+    screenshot,
+    state: Array.from(stateData instanceof Uint8Array ? stateData : new Uint8Array(stateData)),
+  };
+
+  try {
+    await putSave(save);
+    setStatus(`Saved "${gameName}"`, "ok");
+    await renderSavesList();
+  } catch (err) {
+    setStatus(`Save failed: ${err.message}`, "error");
+  }
+}
+
+async function loadGameState(id) {
+  let saves;
+  try {
+    saves = await getAllSaves();
+  } catch {
+    setStatus("Could not read saves.", "error");
+    return;
+  }
+
+  const save = saves.find(s => s.id === id);
+  if (!save) {
+    setStatus("Save not found.", "error");
+    return;
+  }
+
+  showLoading("Restoring save\u2026");
+  setStatus("Restoring save\u2026", "");
+
+  try {
+    // Reconstruct the state as a Uint8Array and create a blob URL
+    const stateBytes = new Uint8Array(save.state);
+    const blob = new Blob([stateBytes], { type: "application/octet-stream" });
+    const blobUrl = URL.createObjectURL(blob);
+
+    await startDos(blobUrl);
+    objectUrl = blobUrl; // track for cleanup
+    currentBundle = save.bundleUrl;
+    setStatus(`Restored "${save.name}"`, "ok");
+  } catch (err) {
+    hideLoading();
+    setStatus(`Restore failed: ${err.message}`, "error");
+  }
+}
+
+async function deleteGameSave(id) {
+  try {
+    await deleteSave(id);
+    await renderSavesList();
+    setStatus("Save deleted.", "");
+  } catch {
+    setStatus("Could not delete save.", "error");
+  }
+}
+
+function formatTimestamp(ts) {
+  const d = new Date(ts);
+  const pad = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+async function renderSavesList() {
+  if (!savesList) return;
+
+  let saves;
+  try {
+    saves = await getAllSaves();
+  } catch {
+    savesList.innerHTML = '<p class="small-note">Could not load saves.</p>';
+    return;
+  }
+
+  if (saves.length === 0) {
+    savesList.innerHTML = '<p class="small-note">No saves yet. Run a game and hit Save.</p>';
+    return;
+  }
+
+  // Build DOM without innerHTML for safety
+  savesList.innerHTML = "";
+
+  for (const save of saves) {
+    const card = document.createElement("div");
+    card.className = "save-card";
+
+    if (save.screenshot) {
+      const img = document.createElement("img");
+      img.className = "save-thumb";
+      img.src = save.screenshot;
+      img.alt = save.name;
+      card.appendChild(img);
+    }
+
+    const info = document.createElement("div");
+    info.className = "save-info";
+
+    const nameEl = document.createElement("span");
+    nameEl.className = "save-name";
+    nameEl.textContent = save.name;
+    info.appendChild(nameEl);
+
+    const dateEl = document.createElement("span");
+    dateEl.className = "save-date";
+    dateEl.textContent = formatTimestamp(save.timestamp);
+    info.appendChild(dateEl);
+
+    card.appendChild(info);
+
+    const actions = document.createElement("div");
+    actions.className = "save-actions";
+
+    const loadBtn = document.createElement("button");
+    loadBtn.className = "action-btn save-load-btn";
+    loadBtn.type = "button";
+    loadBtn.textContent = "Load";
+    loadBtn.addEventListener("click", () => loadGameState(save.id));
+    actions.appendChild(loadBtn);
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "ghost-btn save-del-btn";
+    delBtn.type = "button";
+    delBtn.textContent = "Del";
+    delBtn.addEventListener("click", () => {
+      if (confirm(`Delete save "${save.name}"?`)) {
+        deleteGameSave(save.id);
+      }
+    });
+    actions.appendChild(delBtn);
+
+    card.appendChild(actions);
+    savesList.appendChild(card);
   }
 }
 
@@ -343,13 +628,13 @@ bundleUrlInput.addEventListener("keydown", (e) => {
   }
 });
 
-// Demo buttons — only target buttons that actually have a data-demo attribute
+// Demo buttons
 document.querySelectorAll("[data-demo]").forEach((btn) => {
-  btn.addEventListener("click", () => {
+  btn.addEventListener("click", async () => {
     const url = demoBundles[btn.dataset.demo];
     if (!url) { setStatus("Demo not configured.", "error"); return; }
     setStatus(`Loading ${btn.textContent}\u2026`, "");
-    startDos(url);
+    await startDos(url);
   });
 });
 
@@ -362,12 +647,15 @@ stopBtn.addEventListener("click", async () => {
   setStatus("Stopped.", "");
 });
 
+// Save button
+saveBtn.addEventListener("click", () => saveGameState());
+
 // Fullscreen
 fullscreenBtn.addEventListener("click", async () => {
-  if (!document.fullscreenElement) {
+  if (!document.fullscreenElement && playerShell.requestFullscreen) {
     await playerShell.requestFullscreen().catch(() => {});
     fullscreenBtn.textContent = "Exit Fullscreen";
-  } else {
+  } else if (document.fullscreenElement) {
     await document.exitFullscreen().catch(() => {});
     fullscreenBtn.textContent = "Fullscreen";
   }
@@ -377,12 +665,17 @@ document.addEventListener("fullscreenchange", () => {
   fullscreenBtn.textContent = document.fullscreenElement ? "Exit Fullscreen" : "Fullscreen";
 });
 
-// Cleanup
-window.addEventListener("beforeunload", () => {
+// Warn before losing game state
+window.addEventListener("beforeunload", (e) => {
   if (objectUrl) URL.revokeObjectURL(objectUrl);
+  if (isRunning) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
 });
 
 // ── Init ──────────────────────────────────────────────────────────
 hydrateSettingsUI();
 showEmptyState(true);
 setStatus("Ready \u2014 load a bundle or try a demo", "");
+renderSavesList();

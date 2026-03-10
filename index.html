@@ -22,6 +22,7 @@
         <p class="tagline">DOS games in your browser &mdash; no install, no upload, no BS</p>
       </div>
       <div class="top-bar-actions">
+        <button id="saveBtn" class="ghost-btn" type="button" hidden>Save</button>
         <button id="stopBtn" class="ghost-btn" type="button" hidden>Stop</button>
         <button id="fullscreenBtn" class="ghost-btn" type="button">Fullscreen</button>
       </div>
@@ -61,6 +62,13 @@
             <button class="demo-btn" data-demo="doom">DOOM (Shareware)</button>
             <button class="demo-btn" data-demo="keen">Commander Keen 4</button>
             <button class="demo-btn" data-demo="pinball">Epic Pinball</button>
+          </div>
+        </div>
+
+        <div class="saves-section">
+          <p class="section-title">Saved Games</p>
+          <div id="savesList">
+            <p class="small-note">No saves yet. Run a game and hit Save.</p>
           </div>
         </div>
 
