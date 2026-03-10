@@ -27,7 +27,7 @@ const GAMES = [
   {
     id: "doom",
     name: "DOOM (Shareware)",
-    url: "https://cdn.dos.zone/custom/dos/doom.jsdos",
+    url: "https://v8.js-dos.com/bundles/doom.jsdos", // Using v8.js-dos.com for CORS
     icon: "./assets/doom.png"
   },
   {
@@ -39,7 +39,7 @@ const GAMES = [
   {
     id: "pinball",
     name: "Epic Pinball",
-    url: "https://cdn.dos.zone/custom/dos/epic-pinball.jsdos",
+    url: "https://v8.js-dos.com/bundles/pinball.jsdos", // Normalized URL
     icon: "./assets/pinball.png"
   }
 ];
@@ -233,43 +233,54 @@ async function startDos(bundleUrl) {
     console.log("Loading bundle:", bundleUrl);
 
     try {
-      // Configuration
       const conf = buildDosboxConf();
-      console.log("System Config:", conf);
+      console.log("[C:\\PLAY] Initializing with Config:", conf);
 
       if (window.emulators) {
         window.emulators.pathPrefix = "https://v8.js-dos.com/latest/emulators/";
       }
 
-      console.log("Starting emulator bootstrap...");
-      // Try the most direct all-in-one call first
+      console.log("[C:\\PLAY] Starting Bootstrap...");
+
+      // Step 1: Initialize the Dos player instance
+      // We call it WITHOUT the URL first to get the player/handle reliably
       const startResult = window.Dos(playerHost, {
-        url: bundleUrl,
         dosboxConf: conf,
-        kiosk: true,
+        kiosk: true
       });
 
-      // Handle both Promise and direct object returns
+      // Handle the fact that Dos() might return a Promise or an Object
       const handle = (startResult instanceof Promise) ? await startResult : startResult;
 
-      // Determine if we got a CommandInstance (running) or a Player (needs .run)
+      console.log("[C:\\PLAY] Handle received:", handle);
+      if (handle) console.log("[C:\\PLAY] Handle Keys:", Object.keys(handle));
+
+      // Step 2: Try to run the bundle
       if (handle && typeof handle.run === "function") {
-        console.log("Handle is a Player, calling .run()...");
+        console.log("[C:\\PLAY] Method .run() found, executing...");
         ci = await handle.run(bundleUrl);
-      } else {
-        console.log("Handle is likely the CommandInstance already...");
+      } else if (handle && typeof handle.play === "function") {
+        console.log("[C:\\PLAY] Method .play() found, executing...");
+        ci = await handle.play(bundleUrl);
+      } else if (handle && bundleUrl) {
+        // If the handle itself doesn't have run, maybe it's already the ci?
+        // This happens if Dos(host, {url}) was called (though we tried to avoid it above)
         ci = handle;
+        console.log("[C:\\PLAY] Handle assumed to be CommandInstance.");
       }
 
-      // Check for successful CI
-      if (!ci || typeof ci.exit !== "function") {
-        throw new Error("Initialization failed to produce a valid CommandInstance");
+      // Final validation of the Command Instance (ci)
+      const isValidCi = ci && (typeof ci.exit === "function" || typeof ci.pause === "function" || typeof ci.stop === "function");
+
+      if (!isValidCi) {
+        console.error("[C:\\PLAY] Initialization failed. CI Object:", ci);
+        throw new Error("Initialization failed to produce a valid CommandInstance. Check console.");
       }
 
-      // Listen for exit events
+      // Success!
       if (ci.events) {
         ci.events().onTerminate(() => {
-          console.log("Emulator terminated via CI events.");
+          console.log("[C:\\PLAY] System process terminated.");
           stopCurrent();
         });
       }
