@@ -44,11 +44,9 @@ const settingsFields = {
 
 // ── Constants ─────────────────────────────────────────────────────
 const GAMES = [
-  { id: "doom", name: "DOOM", url: "https://v8.js-dos.com/bundles/doom.jsdos", icon: "https://cdn.dos.zone/original/2X/0/073c681816f1d01f80e07173e13028290f653456.png" },
-  { id: "digger", name: "Digger", url: "https://v8.js-dos.com/bundles/digger.jsdos", icon: "https://cdn.dos.zone/original/2X/e/e0622956cf22d417774844336c53e8310e756a24.png" },
-  { id: "lemmings", name: "Lemmings", url: "https://v8.js-dos.com/bundles/lemmings.jsdos", icon: "https://cdn.dos.zone/original/2X/3/3d010e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
-  { id: "civilization", name: "Sid Meier's Civilization", url: "https://v8.js-dos.com/bundles/civilization.jsdos", icon: "https://cdn.dos.zone/original/2X/c/c1010e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
-  { id: "oregon", name: "The Oregon Trail", url: "https://v8.js-dos.com/bundles/oregon.jsdos", icon: "https://cdn.dos.zone/original/2X/o/o1010e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
+  { id: "doom", name: "DOOM", url: "https://v8.js-dos.com/bundles/doom.jsdos", icon: "./assets/doom.png" },
+  { id: "digger", name: "Digger", url: "https://v8.js-dos.com/bundles/digger.jsdos", icon: "./assets/digger.png" },
+  { id: "pinball", name: "Epic Pinball", url: "https://v8.js-dos.com/bundles/pinball.jsdos", icon: "./assets/pinball.png" },
 ];
 
 const defaultSettings = {
