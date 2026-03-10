@@ -1,66 +1,66 @@
 /* ── C:\PLAY  —  app.js ─────────────────────────────────────────── */
 
 // ── DOM refs ──────────────────────────────────────────────────────
-const statusText    = document.getElementById("statusText");
-const dropzone      = document.getElementById("dropzone");
-const bundleInput   = document.getElementById("bundleInput");
+const statusText = document.getElementById("statusText");
+const dropzone = document.getElementById("dropzone");
+const bundleInput = document.getElementById("bundleInput");
 const bundleUrlInput = document.getElementById("bundleUrl");
-const loadUrlBtn    = document.getElementById("loadUrlBtn");
+const loadUrlBtn = document.getElementById("loadUrlBtn");
 const fullscreenBtn = document.getElementById("fullscreenBtn");
-const stopBtn       = document.getElementById("stopBtn");
-const saveBtn       = document.getElementById("saveBtn");
-const playerShell   = document.getElementById("playerShell");
-const playerHost    = document.getElementById("dos-player");
-const emptyState    = document.getElementById("emptyState");
-const savesList     = document.getElementById("savesList");
+const stopBtn = document.getElementById("stopBtn");
+const saveBtn = document.getElementById("saveBtn");
+const playerShell = document.getElementById("playerShell");
+const playerHost = document.getElementById("dos-player");
+const emptyState = document.getElementById("emptyState");
+const savesList = document.getElementById("savesList");
+const gameGrid = document.getElementById("gameGrid");
 
 const settingsFields = {
-  cycles:    document.getElementById("cycles"),
-  memsize:   document.getElementById("memsize"),
-  sound:     document.getElementById("sound"),
+  cycles: document.getElementById("cycles"),
+  memsize: document.getElementById("memsize"),
+  sound: document.getElementById("sound"),
   themeTint: document.getElementById("themeTint"),
 };
 
 // ── Constants ─────────────────────────────────────────────────────
-const demoBundles = {
-  doom:    "https://cdn.dos.zone/custom/dos/doom.jsdos",
-  digger:  "https://v8.js-dos.com/bundles/digger.jsdos",
-  pinball: "https://cdn.dos.zone/custom/dos/epic-pinball.jsdos",
-};
+const GAMES = [
+  {
+    id: "doom",
+    name: "DOOM (Shareware)",
+    url: "https://cdn.dos.zone/custom/dos/doom.jsdos",
+    icon: "./assets/doom.png"
+  },
+  {
+    id: "digger",
+    name: "Digger",
+    url: "https://v8.js-dos.com/bundles/digger.jsdos",
+    icon: "./assets/digger.png"
+  },
+  {
+    id: "pinball",
+    name: "Epic Pinball",
+    url: "https://cdn.dos.zone/custom/dos/epic-pinball.jsdos",
+    icon: "./assets/pinball.png"
+  }
+];
 
 const defaultSettings = {
-  cycles:    12000,
-  memsize:   16,
-  sound:     "on",
+  cycles: 12000,
+  memsize: 16,
+  sound: "on",
   themeTint: "amber",
 };
 
-// ── AudioContext tracking ────────────────────────────────────────
-// Patch AudioContext so we can close every instance on game stop.
-// js-dos (and DOSBox WASM) may create AudioContexts that outlive ci.exit().
-window._cplayAudioContexts = [];
-const _OrigAudioContext = window.AudioContext || window.webkitAudioContext;
-if (_OrigAudioContext) {
-  const PatchedAudioContext = function (...args) {
-    const ctx = new _OrigAudioContext(...args);
-    window._cplayAudioContexts.push(ctx);
-    return ctx;
-  };
-  PatchedAudioContext.prototype = _OrigAudioContext.prototype;
-  window.AudioContext = PatchedAudioContext;
-  if (window.webkitAudioContext) window.webkitAudioContext = PatchedAudioContext;
-}
-
 // ── State ─────────────────────────────────────────────────────────
-let ci            = null;
-let objectUrl     = null;
-let isRunning     = false;
-let startingLock  = false;   // prevents overlapping startDos calls
+let ci = null;
+let objectUrl = null;
+let isRunning = false;
+let startingLock = false;   // prevents overlapping startDos calls
 let currentBundle = "";      // tracks what bundle is loaded (for save metadata)
 
 // ── Helpers ───────────────────────────────────────────────────────
 function setStatus(message, type = "ok") {
-  statusText.textContent = message;
+  statusText.textContent = `C:\\PLAY> ${message}${message.endsWith("_") ? "" : "_"}`;
   statusText.className = type; // "ok" | "error" | "" (neutral)
 }
 
@@ -113,9 +113,9 @@ function readSettings() {
 
 function persistSettings() {
   const value = {
-    cycles:    clamp(Number(settingsFields.cycles.value) || defaultSettings.cycles, 500, 50000),
-    memsize:   clamp(Number(settingsFields.memsize.value) || defaultSettings.memsize, 8, 64),
-    sound:     settingsFields.sound.value === "off" ? "off" : "on",
+    cycles: clamp(Number(settingsFields.cycles.value) || defaultSettings.cycles, 500, 50000),
+    memsize: clamp(Number(settingsFields.memsize.value) || defaultSettings.memsize, 8, 64),
+    sound: settingsFields.sound.value === "off" ? "off" : "on",
     themeTint: ["amber", "green", "ice"].includes(settingsFields.themeTint.value)
       ? settingsFields.themeTint.value
       : "amber",
@@ -126,82 +126,69 @@ function persistSettings() {
 
 function hydrateSettingsUI() {
   const s = readSettings();
-  settingsFields.cycles.value    = s.cycles;
-  settingsFields.memsize.value   = s.memsize;
-  settingsFields.sound.value     = s.sound;
+  settingsFields.cycles.value = s.cycles;
+  settingsFields.memsize.value = s.memsize;
+  settingsFields.sound.value = s.sound;
   settingsFields.themeTint.value = s.themeTint;
-  document.body.dataset.tint     = s.themeTint;
+  document.body.dataset.tint = s.themeTint;
 }
 
 // ── Emulator lifecycle ────────────────────────────────────────────
 
 // Close every AudioContext the emulator may have created inside playerHost
 function closeOrphanedAudioContexts() {
-  // js-dos stores its AudioContext on the emulator's global or on window;
-  // closing *all* contexts that are still "running" is the safest approach.
+  // Brute-force cleanup of any common global references js-dos might leave
   try {
-    // Some js-dos versions expose the context on the ci object
-    if (ci?.audioContext && ci.audioContext.state !== "closed") {
-      ci.audioContext.close().catch(() => {});
+    if (window.audioContext && window.audioContext.state !== "closed") {
+      window.audioContext.close().catch(() => { });
     }
-  } catch { /* ignore */ }
+  } catch (e) { }
 
-  // Brute-force: suspend/close every AudioContext we can reach.
-  // Browsers keep a list internally; we can't enumerate them, but we can
-  // look for the one js-dos attached to the player DOM tree or to window.
   try {
     const canvases = playerHost.querySelectorAll("canvas");
     for (const c of canvases) {
-      const ctx = c._audioCtx || c.audioCtx;
-      if (ctx && ctx.state !== "closed") ctx.close().catch(() => {});
+      if (c.audioCtx && c.audioCtx.state !== "closed") {
+        c.audioCtx.close().catch(() => { });
+      }
     }
-  } catch { /* ignore */ }
-
-  // js-dos 8.x attaches the audio context to window.dosInstance or similar
-  try {
-    if (window.audioContext && window.audioContext.state !== "closed") {
-      window.audioContext.close().catch(() => {});
-      window.audioContext = undefined;
-    }
-  } catch { /* ignore */ }
+  } catch (e) { }
 }
 
 async function stopCurrent() {
   hideLoading();
 
-  // 1. Tear down emulator (this should stop audio, but often doesn't fully)
-  if (ci?.exit) {
-    try { await ci.exit(); } catch { /* swallow */ }
+  if (ci) {
+    try {
+      console.log("Stopping emulator...");
+      if (typeof ci.exit === "function") {
+        await ci.exit();
+      }
+    } catch (e) {
+      console.warn("Error during emulator exit:", e);
+    }
   }
 
-  // 2. Force-close any lingering AudioContexts so music stops immediately
-  closeOrphanedAudioContexts();
+  // Clear state
   ci = null;
+  isRunning = false;
 
   if (objectUrl) {
     URL.revokeObjectURL(objectUrl);
     objectUrl = null;
   }
 
-  // 3. Fully clear the player DOM (removes canvas, iframes, Web Audio nodes)
-  playerHost.innerHTML = "";
+  // Wait for resources to free
+  await new Promise(r => setTimeout(r, 150));
 
-  // 4. Suspend any remaining AudioContexts that the DOM removal didn't catch.
-  //    Walking all contexts via the BaseAudioContext isn't possible in every
-  //    browser, so we iterate through the (potentially patched) constructor.
-  try {
-    const allContexts = window._cplayAudioContexts || [];
-    for (const actx of allContexts) {
-      if (actx.state !== "closed") actx.close().catch(() => {});
-    }
-    window._cplayAudioContexts = [];
-  } catch { /* ignore */ }
+  // Clean DOM and lingering audio
+  closeOrphanedAudioContexts();
+  playerHost.innerHTML = "";
 
   setRunning(false);
 }
 
 function buildDosboxConf() {
-  const s  = readSettings();
+  const s = readSettings();
   const sb = s.sound === "on" ? "true" : "false";
   return `
 [sdl]
@@ -239,38 +226,42 @@ async function startDos(bundleUrl) {
   try {
     await stopCurrent();
 
-    // Brief pause so the browser can finish tearing down audio/video
-    // resources from the previous emulator before we spin up a new one.
-    await new Promise(r => setTimeout(r, 100));
-
     showEmptyState(false);
-    showLoading("Starting emulator\u2026");
-    setStatus("Starting emulator\u2026", "");
+    showLoading("Initializing System...");
+    setStatus("Booting...", "");
 
-    const conf = buildDosboxConf();
+    console.log("Loading bundle:", bundleUrl);
 
     try {
-      ci = await window.Dos(playerHost, {
-        url: bundleUrl,
-        autoStart: true,
-        kiosk: true,
-        dosboxConf: conf,
-      });
-    } catch {
-      try {
-        ci = await window.Dos(playerHost, { kiosk: true, dosboxConf: conf });
-        if (ci?.run) await ci.run(bundleUrl);
-      } catch (inner) {
-        hideLoading();
-        setStatus(`Emulator failed: ${inner.message || "unknown error"}`, "error");
-        setRunning(false);
-        return;
+      // Configure js-dos v8
+      if (window.emulators) {
+        window.emulators.pathPrefix = "https://v8.js-dos.com/latest/emulators/";
       }
+
+      const dos = window.Dos(playerHost);
+
+      // Use standard run pattern
+      ci = await dos.run(bundleUrl);
+
+      // Listen for exit events
+      if (ci && ci.events) {
+        ci.events().onTerminate(() => {
+          console.log("Emulator terminated.");
+          stopCurrent();
+        });
+      }
+
+    } catch (err) {
+      console.error("Emulator Boot Failure:", err);
+      hideLoading();
+      setStatus(`System Error: ${err.message || "Unknown"}`, "error");
+      setRunning(false);
+      return;
     }
 
     currentBundle = bundleUrl;
     hideLoading();
-    setStatus("Running \u2014 Ctrl+F10 to release mouse", "ok");
+    setStatus("System Ready - Drive A:", "ok");
     setRunning(true);
   } finally {
     startingLock = false;
@@ -306,7 +297,7 @@ async function loadUserBundle(file) {
 // ── URL normalization ─────────────────────────────────────────────
 function normalizeGithubUrl(urlValue) {
   try {
-    const url   = new URL(urlValue);
+    const url = new URL(urlValue);
     const parts = url.pathname.split("/").filter(Boolean);
 
     if (url.hostname !== "github.com" || parts.length < 2) return urlValue;
@@ -353,7 +344,7 @@ function transformCloudDriveUrl(urlValue) {
 
 async function resolveGithubRepoArchive(urlValue) {
   try {
-    const url   = new URL(urlValue);
+    const url = new URL(urlValue);
     const parts = url.pathname.split("/").filter(Boolean);
 
     if (url.hostname !== "github.com" || parts.length !== 2) {
@@ -366,7 +357,7 @@ async function resolveGithubRepoArchive(urlValue) {
     try {
       const res = await fetch(api, { headers: { Accept: "application/vnd.github+json" } });
       if (!res.ok) throw new Error("API error");
-      const data   = await res.json();
+      const data = await res.json();
       const branch = data.default_branch || "main";
       return `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/${branch}`;
     } catch {
@@ -390,19 +381,19 @@ async function loadBundleFromUrl(rawUrl) {
     return;
   }
 
-  let finalUrl      = typedUrl;
-  let transformNote  = "";
+  let finalUrl = typedUrl;
+  let transformNote = "";
 
   try {
     if (/^https:\/\/github\.com\/[^/]+\/[^/]+\/?$/i.test(typedUrl)) {
-      finalUrl      = await resolveGithubRepoArchive(typedUrl);
+      finalUrl = await resolveGithubRepoArchive(typedUrl);
       transformNote = "Resolved GitHub repo to archive.";
     } else {
       finalUrl = normalizeGithubUrl(typedUrl);
     }
 
-    const cloud   = transformCloudDriveUrl(finalUrl);
-    finalUrl      = cloud.finalUrl;
+    const cloud = transformCloudDriveUrl(finalUrl);
+    finalUrl = cloud.finalUrl;
     transformNote = transformNote || cloud.note;
 
     showLoading("Fetching bundle\u2026");
@@ -417,7 +408,7 @@ async function loadBundleFromUrl(rawUrl) {
 }
 
 // ── Save / Load system (IndexedDB) ───────────────────────────────
-const DB_NAME    = "cplay-saves";
+const DB_NAME = "cplay-saves";
 const DB_VERSION = 1;
 const STORE_NAME = "saves";
 
@@ -431,14 +422,14 @@ function openSavesDB() {
       }
     };
     req.onsuccess = () => resolve(req.result);
-    req.onerror   = () => reject(req.error);
+    req.onerror = () => reject(req.error);
   });
 }
 
 function dbTransaction(mode, fn) {
   return openSavesDB().then(db => {
     return new Promise((resolve, reject) => {
-      const tx    = db.transaction(STORE_NAME, mode);
+      const tx = db.transaction(STORE_NAME, mode);
       const store = tx.objectStore(STORE_NAME);
       fn(store, resolve, reject);
       tx.onerror = () => reject(tx.error);
@@ -479,7 +470,7 @@ function captureScreenshot() {
     // Scale down to thumbnail
     const thumb = document.createElement("canvas");
     const scale = 120 / Math.max(canvas.width, 1);
-    thumb.width  = Math.round(canvas.width * scale);
+    thumb.width = Math.round(canvas.width * scale);
     thumb.height = Math.round(canvas.height * scale);
     const ctx = thumb.getContext("2d");
     ctx.drawImage(canvas, 0, 0, thumb.width, thumb.height);
@@ -699,15 +690,39 @@ bundleUrlInput.addEventListener("keydown", (e) => {
   }
 });
 
-// Demo buttons
-document.querySelectorAll("[data-demo]").forEach((btn) => {
-  btn.addEventListener("click", async () => {
-    const url = demoBundles[btn.dataset.demo];
-    if (!url) { setStatus("Demo not configured.", "error"); return; }
-    setStatus(`Loading ${btn.textContent}\u2026`, "");
-    await startDos(url);
+function renderGameGrid() {
+  if (!gameGrid) return;
+  gameGrid.innerHTML = "";
+
+  GAMES.forEach(game => {
+    const card = document.createElement("div");
+    card.className = "game-card";
+    card.setAttribute("aria-label", `Play ${game.name}`);
+
+    const iconContainer = document.createElement("div");
+    iconContainer.className = "game-icon-container";
+
+    const img = document.createElement("img");
+    img.src = game.icon;
+    img.className = "game-thumb";
+    img.alt = "";
+
+    const label = document.createElement("span");
+    label.className = "game-label";
+    label.textContent = game.name;
+
+    iconContainer.appendChild(img);
+    card.appendChild(iconContainer);
+    card.appendChild(label);
+
+    card.addEventListener("click", async () => {
+      setStatus(`Loading ${game.name}...`, "");
+      await startDos(game.url);
+    });
+
+    gameGrid.appendChild(card);
   });
-});
+}
 
 // Settings persistence
 Object.values(settingsFields).forEach((f) => f.addEventListener("change", persistSettings));
@@ -724,10 +739,10 @@ saveBtn.addEventListener("click", () => saveGameState());
 // Fullscreen
 fullscreenBtn.addEventListener("click", async () => {
   if (!document.fullscreenElement && playerShell.requestFullscreen) {
-    await playerShell.requestFullscreen().catch(() => {});
+    await playerShell.requestFullscreen().catch(() => { });
     fullscreenBtn.textContent = "Exit Fullscreen";
   } else if (document.fullscreenElement) {
-    await document.exitFullscreen().catch(() => {});
+    await document.exitFullscreen().catch(() => { });
     fullscreenBtn.textContent = "Fullscreen";
   }
 });
@@ -748,5 +763,6 @@ window.addEventListener("beforeunload", (e) => {
 // ── Init ──────────────────────────────────────────────────────────
 hydrateSettingsUI();
 showEmptyState(true);
-setStatus("Ready \u2014 load a bundle or try a demo", "");
+setStatus("Ready", "");
+renderGameGrid();
 renderSavesList();
