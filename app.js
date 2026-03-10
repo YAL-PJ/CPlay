@@ -23,9 +23,9 @@ const settingsFields = {
 
 // ── Constants ─────────────────────────────────────────────────────
 const demoBundles = {
-  doom:    "https://v8.js-dos.com/bundles/doom.jsdos",
-  keen:    "https://v8.js-dos.com/bundles/keen.jsdos",
-  pinball: "https://v8.js-dos.com/bundles/epic-pinball.jsdos",
+  doom:    "https://cdn.dos.zone/custom/dos/doom.jsdos",
+  digger:  "https://v8.js-dos.com/bundles/digger.jsdos",
+  pinball: "https://cdn.dos.zone/custom/dos/epic-pinball.jsdos",
 };
 
 const defaultSettings = {
@@ -34,6 +34,22 @@ const defaultSettings = {
   sound:     "on",
   themeTint: "amber",
 };
+
+// ── AudioContext tracking ────────────────────────────────────────
+// Patch AudioContext so we can close every instance on game stop.
+// js-dos (and DOSBox WASM) may create AudioContexts that outlive ci.exit().
+window._cplayAudioContexts = [];
+const _OrigAudioContext = window.AudioContext || window.webkitAudioContext;
+if (_OrigAudioContext) {
+  const PatchedAudioContext = function (...args) {
+    const ctx = new _OrigAudioContext(...args);
+    window._cplayAudioContexts.push(ctx);
+    return ctx;
+  };
+  PatchedAudioContext.prototype = _OrigAudioContext.prototype;
+  window.AudioContext = PatchedAudioContext;
+  if (window.webkitAudioContext) window.webkitAudioContext = PatchedAudioContext;
+}
 
 // ── State ─────────────────────────────────────────────────────────
 let ci            = null;
@@ -118,11 +134,48 @@ function hydrateSettingsUI() {
 }
 
 // ── Emulator lifecycle ────────────────────────────────────────────
+
+// Close every AudioContext the emulator may have created inside playerHost
+function closeOrphanedAudioContexts() {
+  // js-dos stores its AudioContext on the emulator's global or on window;
+  // closing *all* contexts that are still "running" is the safest approach.
+  try {
+    // Some js-dos versions expose the context on the ci object
+    if (ci?.audioContext && ci.audioContext.state !== "closed") {
+      ci.audioContext.close().catch(() => {});
+    }
+  } catch { /* ignore */ }
+
+  // Brute-force: suspend/close every AudioContext we can reach.
+  // Browsers keep a list internally; we can't enumerate them, but we can
+  // look for the one js-dos attached to the player DOM tree or to window.
+  try {
+    const canvases = playerHost.querySelectorAll("canvas");
+    for (const c of canvases) {
+      const ctx = c._audioCtx || c.audioCtx;
+      if (ctx && ctx.state !== "closed") ctx.close().catch(() => {});
+    }
+  } catch { /* ignore */ }
+
+  // js-dos 8.x attaches the audio context to window.dosInstance or similar
+  try {
+    if (window.audioContext && window.audioContext.state !== "closed") {
+      window.audioContext.close().catch(() => {});
+      window.audioContext = undefined;
+    }
+  } catch { /* ignore */ }
+}
+
 async function stopCurrent() {
   hideLoading();
+
+  // 1. Tear down emulator (this should stop audio, but often doesn't fully)
   if (ci?.exit) {
     try { await ci.exit(); } catch { /* swallow */ }
   }
+
+  // 2. Force-close any lingering AudioContexts so music stops immediately
+  closeOrphanedAudioContexts();
   ci = null;
 
   if (objectUrl) {
@@ -130,7 +183,20 @@ async function stopCurrent() {
     objectUrl = null;
   }
 
+  // 3. Fully clear the player DOM (removes canvas, iframes, Web Audio nodes)
   playerHost.innerHTML = "";
+
+  // 4. Suspend any remaining AudioContexts that the DOM removal didn't catch.
+  //    Walking all contexts via the BaseAudioContext isn't possible in every
+  //    browser, so we iterate through the (potentially patched) constructor.
+  try {
+    const allContexts = window._cplayAudioContexts || [];
+    for (const actx of allContexts) {
+      if (actx.state !== "closed") actx.close().catch(() => {});
+    }
+    window._cplayAudioContexts = [];
+  } catch { /* ignore */ }
+
   setRunning(false);
 }
 
@@ -172,6 +238,11 @@ async function startDos(bundleUrl) {
 
   try {
     await stopCurrent();
+
+    // Brief pause so the browser can finish tearing down audio/video
+    // resources from the previous emulator before we spin up a new one.
+    await new Promise(r => setTimeout(r, 100));
+
     showEmptyState(false);
     showLoading("Starting emulator\u2026");
     setStatus("Starting emulator\u2026", "");
