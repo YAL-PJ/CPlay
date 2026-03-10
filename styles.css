@@ -93,6 +93,12 @@ body {
   inset: 0;
   background: radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.2) 100%);
   pointer-events: none;
+  animation: flicker 0.15s infinite;
+}
+
+#gameSearch:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
 }
 
 @keyframes flicker {
@@ -280,13 +286,14 @@ body {
 
 /* ── Controls sidebar ──────────────────────────────────────────── */
 .controls-panel {
-  padding: 1rem 1rem 1.5rem;
-  overflow-y: auto;
+  padding: 1rem 1rem 0;
+  overflow: hidden;
+  /* Inner elements will scroll */
   border-right: 1px solid var(--panel-border);
   border-radius: 0;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  height: 100%;
 }
 
 .controls-panel h1 {
@@ -402,16 +409,69 @@ body {
   filter: none;
 }
 
-/* ── Demo list (DOS Grid) ───────────────────────────────────────── */
-.demo-list {
-  margin-bottom: 1.25rem;
+/* ── Library Section (A:\GAMES) ────────────────────────────────── */
+.library-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  /* Important for inner scroll */
+  margin-bottom: 1rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  gap: 0.75rem;
+}
+
+.search-box {
+  flex: 1;
+  position: relative;
+}
+
+#gameSearch {
+  width: 100%;
+  font-size: 0.75rem;
+  padding: 0.3rem 0.6rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--panel-border);
+  color: var(--accent);
+}
+
+#gameSearch::placeholder {
+  color: var(--muted);
+  opacity: 0.5;
 }
 
 .game-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-  gap: 0.75rem;
-  margin-top: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 0.5rem;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  margin-top: 0.25rem;
+  flex: 1;
+}
+
+/* Custom scrollbar for game grid */
+.game-grid::-webkit-scrollbar {
+  width: 4px;
+}
+
+.game-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.game-grid::-webkit-scrollbar-thumb {
+  background: var(--panel-border);
+  border-radius: 2px;
+}
+
+.game-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-dim);
 }
 
 .game-card {
