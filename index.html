@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>C:\PLAY — Play DOS Games Online, No Install</title>
+    <meta
+      name="description"
+      content="C:\\PLAY lets you run DOS games in your browser with no install. Load your own .jsdos bundle locally, tweak emulator defaults, and play instantly."
+    />
+    <link rel="preconnect" href="https://v8.js-dos.com" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="scanlines" aria-hidden="true"></div>
+    <header class="top-bar">
+      <div class="brand-wrap">
+        <p class="brand">C:\PLAY</p>
+        <p class="tagline">Play DOS games online — no install required</p>
+      </div>
+      <button id="fullscreenBtn" class="ghost-btn" type="button">Fullscreen</button>
+    </header>
+
+    <main class="layout">
+      <section class="panel controls-panel">
+        <h1>Load & Play</h1>
+        <p class="subtle">
+          Drop a <strong>.jsdos</strong> bundle to run your own game locally. Nothing gets uploaded.
+        </p>
+
+        <label class="dropzone" id="dropzone">
+          <input id="bundleInput" type="file" accept=".jsdos,.zip,application/zip" />
+          <span class="drop-title">Drop bundle here</span>
+          <span class="drop-subtitle">or click to browse</span>
+        </label>
+
+        <div class="url-loader">
+          <label for="bundleUrl" class="section-title">Or paste a bundle URL / GitHub link</label>
+          <div class="url-row">
+            <input
+              id="bundleUrl"
+              type="url"
+              placeholder="https://.../game.jsdos or https://github.com/user/repo"
+            />
+            <button id="loadUrlBtn" type="button" class="demo-btn">Load URL</button>
+          </div>
+          <p class="small-note">
+            Supports direct <code>.jsdos</code>/<code>.zip</code> links, GitHub blob/raw/repo links, plus common Google Drive/Dropbox/OneDrive share links — no manual download step in normal cases.
+          </p>
+        </div>
+
+        <div class="demo-list">
+          <p class="section-title">Try a demo</p>
+          <div class="demo-buttons">
+            <button class="demo-btn" data-demo="doom">DOOM (Shareware)</button>
+            <button class="demo-btn" data-demo="keen">Commander Keen 4 (Shareware)</button>
+            <button class="demo-btn" data-demo="pinball">Epic Pinball (Shareware)</button>
+          </div>
+        </div>
+
+        <details class="settings" open>
+          <summary>Emulator settings</summary>
+          <div class="settings-grid">
+            <label>
+              CPU cycles
+              <input id="cycles" type="number" min="500" max="50000" step="500" />
+            </label>
+            <label>
+              Memory (MB)
+              <input id="memsize" type="number" min="8" max="64" step="1" />
+            </label>
+            <label>
+              Sound
+              <select id="sound">
+                <option value="on">Enabled</option>
+                <option value="off">Disabled</option>
+              </select>
+            </label>
+            <label>
+              Theme tint
+              <select id="themeTint">
+                <option value="amber">Amber</option>
+                <option value="green">Green</option>
+                <option value="ice">Ice</option>
+              </select>
+            </label>
+          </div>
+          <p class="small-note">
+            Defaults are designed for broad compatibility. Some games may need custom DOSBox configs.
+          </p>
+        </details>
+      </section>
+
+      <section class="panel player-panel">
+        <div class="player-topline">
+          <p id="statusText">Ready. Load a bundle or try a demo.</p>
+        </div>
+        <div id="playerShell">
+          <div id="dos-player" aria-label="DOS player"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://v8.js-dos.com/latest/js-dos.js"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
