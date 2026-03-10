@@ -238,10 +238,17 @@ async function startDos(bundleUrl) {
         window.emulators.pathPrefix = "https://v8.js-dos.com/latest/emulators/";
       }
 
-      const dos = window.Dos(playerHost);
+      const conf = buildDosboxConf();
+      console.log("Starting Dos handle...");
 
-      // Use standard run pattern
-      ci = await dos.run(bundleUrl);
+      // The Dos constructor returns a promise in v8
+      const handle = await window.Dos(playerHost, {
+        dosboxConf: conf,
+        kiosk: true,
+      });
+
+      console.log("Handle ready, running bundle...");
+      ci = await handle.run(bundleUrl);
 
       // Listen for exit events
       if (ci && ci.events) {
