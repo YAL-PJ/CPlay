@@ -233,27 +233,43 @@ async function startDos(bundleUrl) {
     console.log("Loading bundle:", bundleUrl);
 
     try {
-      // Configure js-dos v8
+      // Configuration
+      const conf = buildDosboxConf();
+      console.log("System Config:", conf);
+
       if (window.emulators) {
         window.emulators.pathPrefix = "https://v8.js-dos.com/latest/emulators/";
       }
 
-      const conf = buildDosboxConf();
-      console.log("Starting Dos handle...");
-
-      // The Dos constructor returns a promise in v8
-      const handle = await window.Dos(playerHost, {
+      console.log("Starting emulator bootstrap...");
+      // Try the most direct all-in-one call first
+      const startResult = window.Dos(playerHost, {
+        url: bundleUrl,
         dosboxConf: conf,
         kiosk: true,
       });
 
-      console.log("Handle ready, running bundle...");
-      ci = await handle.run(bundleUrl);
+      // Handle both Promise and direct object returns
+      const handle = (startResult instanceof Promise) ? await startResult : startResult;
+
+      // Determine if we got a CommandInstance (running) or a Player (needs .run)
+      if (handle && typeof handle.run === "function") {
+        console.log("Handle is a Player, calling .run()...");
+        ci = await handle.run(bundleUrl);
+      } else {
+        console.log("Handle is likely the CommandInstance already...");
+        ci = handle;
+      }
+
+      // Check for successful CI
+      if (!ci || typeof ci.exit !== "function") {
+        throw new Error("Initialization failed to produce a valid CommandInstance");
+      }
 
       // Listen for exit events
-      if (ci && ci.events) {
+      if (ci.events) {
         ci.events().onTerminate(() => {
-          console.log("Emulator terminated.");
+          console.log("Emulator terminated via CI events.");
           stopCurrent();
         });
       }
