@@ -1,68 +1,109 @@
-const statusText = document.getElementById("statusText");
-const dropzone = document.getElementById("dropzone");
-const bundleInput = document.getElementById("bundleInput");
+/* ── C:\PLAY  —  app.js ─────────────────────────────────────────── */
+
+// ── DOM refs ──────────────────────────────────────────────────────
+const statusText    = document.getElementById("statusText");
+const dropzone      = document.getElementById("dropzone");
+const bundleInput   = document.getElementById("bundleInput");
 const bundleUrlInput = document.getElementById("bundleUrl");
-const loadUrlBtn = document.getElementById("loadUrlBtn");
+const loadUrlBtn    = document.getElementById("loadUrlBtn");
 const fullscreenBtn = document.getElementById("fullscreenBtn");
-const playerHost = document.getElementById("dos-player");
+const stopBtn       = document.getElementById("stopBtn");
+const playerShell   = document.getElementById("playerShell");
+const playerHost    = document.getElementById("dos-player");
+const emptyState    = document.getElementById("emptyState");
 
 const settingsFields = {
-  cycles: document.getElementById("cycles"),
-  memsize: document.getElementById("memsize"),
-  sound: document.getElementById("sound"),
+  cycles:    document.getElementById("cycles"),
+  memsize:   document.getElementById("memsize"),
+  sound:     document.getElementById("sound"),
   themeTint: document.getElementById("themeTint"),
 };
 
+// ── Constants ─────────────────────────────────────────────────────
 const demoBundles = {
-  doom: "https://v8.js-dos.com/bundles/doom.jsdos",
-  keen: "https://v8.js-dos.com/bundles/keen.jsdos",
+  doom:    "https://v8.js-dos.com/bundles/doom.jsdos",
+  keen:    "https://v8.js-dos.com/bundles/keen.jsdos",
   pinball: "https://v8.js-dos.com/bundles/epic-pinball.jsdos",
 };
 
 const defaultSettings = {
-  cycles: 12000,
-  memsize: 16,
-  sound: "on",
+  cycles:    12000,
+  memsize:   16,
+  sound:     "on",
   themeTint: "amber",
 };
 
-let ci = null;
-let objectUrl = null;
+// ── State ─────────────────────────────────────────────────────────
+let ci        = null;
+let objectUrl  = null;
+let isRunning  = false;
 
-function setStatus(message, isError = false) {
+// ── Helpers ───────────────────────────────────────────────────────
+function setStatus(message, type = "ok") {
   statusText.textContent = message;
-  statusText.style.color = isError ? "#ff8181" : "#69d086";
+  statusText.className = type; // "ok" | "error" | "" (neutral)
 }
 
+function showEmptyState(visible) {
+  emptyState.style.display = visible ? "" : "none";
+}
+
+function showLoading(message) {
+  hideLoading();
+  const overlay = document.createElement("div");
+  overlay.className = "loading-overlay";
+  overlay.id = "loadingOverlay";
+  overlay.innerHTML = `<div class="spinner"></div><p>${escapeHtml(message)}</p>`;
+  playerShell.appendChild(overlay);
+}
+
+function hideLoading() {
+  document.getElementById("loadingOverlay")?.remove();
+}
+
+function escapeHtml(str) {
+  const d = document.createElement("div");
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function setRunning(running) {
+  isRunning = running;
+  stopBtn.hidden = !running;
+  showEmptyState(!running && !ci);
+}
+
+// ── Settings ──────────────────────────────────────────────────────
 function readSettings() {
   const stored = localStorage.getItem("cplay.settings");
-  return stored ? { ...defaultSettings, ...JSON.parse(stored) } : defaultSettings;
+  return stored ? { ...defaultSettings, ...JSON.parse(stored) } : { ...defaultSettings };
 }
 
 function persistSettings() {
   const value = {
-    cycles: Number(settingsFields.cycles.value) || defaultSettings.cycles,
-    memsize: Number(settingsFields.memsize.value) || defaultSettings.memsize,
-    sound: settingsFields.sound.value,
+    cycles:    Number(settingsFields.cycles.value) || defaultSettings.cycles,
+    memsize:   Number(settingsFields.memsize.value) || defaultSettings.memsize,
+    sound:     settingsFields.sound.value,
     themeTint: settingsFields.themeTint.value,
   };
-
   localStorage.setItem("cplay.settings", JSON.stringify(value));
   document.body.dataset.tint = value.themeTint;
 }
 
 function hydrateSettingsUI() {
-  const settings = readSettings();
-  settingsFields.cycles.value = settings.cycles;
-  settingsFields.memsize.value = settings.memsize;
-  settingsFields.sound.value = settings.sound;
-  settingsFields.themeTint.value = settings.themeTint;
-  document.body.dataset.tint = settings.themeTint;
+  const s = readSettings();
+  settingsFields.cycles.value    = s.cycles;
+  settingsFields.memsize.value   = s.memsize;
+  settingsFields.sound.value     = s.sound;
+  settingsFields.themeTint.value = s.themeTint;
+  document.body.dataset.tint     = s.themeTint;
 }
 
+// ── Emulator lifecycle ────────────────────────────────────────────
 async function stopCurrent() {
+  hideLoading();
   if (ci?.exit) {
-    await ci.exit();
+    try { await ci.exit(); } catch { /* swallow */ }
   }
   ci = null;
 
@@ -72,23 +113,23 @@ async function stopCurrent() {
   }
 
   playerHost.innerHTML = "";
+  setRunning(false);
 }
 
 function buildDosboxConf() {
-  const settings = readSettings();
-  const sb = settings.sound === "on" ? "true" : "false";
-
+  const s  = readSettings();
+  const sb = s.sound === "on" ? "true" : "false";
   return `
 [sdl]
 fullscreen=false
 fulldouble=true
 
 [dosbox]
-memsize=${settings.memsize}
+memsize=${s.memsize}
 
 [cpu]
 core=auto
-cycles=${settings.cycles}
+cycles=${s.cycles}
 
 [sblaster]
 sbtype=sb16
@@ -100,7 +141,7 @@ mixer=${sb}
 oplmode=auto
 
 [mixer]
-nosound=${settings.sound === "on" ? "false" : "true"}
+nosound=${s.sound === "on" ? "false" : "true"}
 rate=44100
 blocksize=2048
 prebuffer=40
@@ -108,8 +149,10 @@ prebuffer=40
 }
 
 async function startDos(bundleUrl) {
-  setStatus("Starting emulator...");
   await stopCurrent();
+  showEmptyState(false);
+  showLoading("Starting emulator\u2026");
+  setStatus("Starting emulator\u2026", "");
 
   const conf = buildDosboxConf();
 
@@ -121,53 +164,53 @@ async function startDos(bundleUrl) {
       dosboxConf: conf,
     });
   } catch {
-    ci = await window.Dos(playerHost, { kiosk: true, dosboxConf: conf });
-    if (ci?.run) {
-      await ci.run(bundleUrl);
+    try {
+      ci = await window.Dos(playerHost, { kiosk: true, dosboxConf: conf });
+      if (ci?.run) await ci.run(bundleUrl);
+    } catch (inner) {
+      hideLoading();
+      setStatus(`Emulator failed: ${inner.message || "unknown error"}`, "error");
+      setRunning(false);
+      return;
     }
   }
 
-  setStatus("Running. Press Ctrl+F10 to release mouse.");
+  hideLoading();
+  setStatus("Running \u2014 Ctrl+F10 to release mouse", "ok");
+  setRunning(true);
 }
 
+// ── File loading ──────────────────────────────────────────────────
 async function loadUserBundle(file) {
   if (!file) return;
 
-  const isZipLike = file.name.toLowerCase().endsWith(".jsdos") || file.name.toLowerCase().endsWith(".zip");
-
-  if (!isZipLike) {
-    setStatus("Please choose a .jsdos or .zip bundle.", true);
+  const name = file.name.toLowerCase();
+  if (!name.endsWith(".jsdos") && !name.endsWith(".zip")) {
+    setStatus("Only .jsdos or .zip bundles are supported.", "error");
     return;
   }
 
   objectUrl = URL.createObjectURL(file);
-  setStatus(`Loading ${file.name}...`);
+  showLoading(`Loading ${file.name}\u2026`);
+  setStatus(`Loading ${file.name}\u2026`, "");
   await startDos(objectUrl);
 }
 
+// ── URL normalization ─────────────────────────────────────────────
 function normalizeGithubUrl(urlValue) {
   try {
-    const url = new URL(urlValue);
+    const url   = new URL(urlValue);
     const parts = url.pathname.split("/").filter(Boolean);
 
-    if (url.hostname !== "github.com" || parts.length < 2) {
-      return urlValue;
-    }
+    if (url.hostname !== "github.com" || parts.length < 2) return urlValue;
 
     const [owner, repo, mode, branch, ...rest] = parts;
 
-    if (mode === "blob" && branch && rest.length > 0) {
+    if ((mode === "blob" || mode === "raw") && branch && rest.length > 0) {
       return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${rest.join("/")}`;
     }
 
-    if (mode === "raw" && branch && rest.length > 0) {
-      return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${rest.join("/")}`;
-    }
-
-    if (!mode) {
-      return `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/main`;
-    }
-
+    // Bare repo URLs are handled by resolveGithubRepoArchive — don't guess the branch here
     return urlValue;
   } catch {
     return urlValue;
@@ -179,100 +222,97 @@ function transformCloudDriveUrl(urlValue) {
     const url = new URL(urlValue);
 
     if (url.hostname === "drive.google.com") {
-      const fileIdFromPath = url.pathname.match(/\/file\/d\/([^/]+)/)?.[1];
-      const fileId = fileIdFromPath || url.searchParams.get("id");
-
+      const fileId = url.pathname.match(/\/file\/d\/([^/]+)/)?.[1] || url.searchParams.get("id");
       if (fileId) {
         return {
           finalUrl: `https://drive.google.com/uc?export=download&id=${fileId}`,
-          note: "Converted Google Drive share link to direct download URL.",
+          note: "Converted Google Drive link to direct download.",
         };
       }
     }
 
     if (url.hostname.endsWith("dropbox.com")) {
       url.searchParams.set("dl", "1");
-      return {
-        finalUrl: url.toString(),
-        note: "Converted Dropbox share link to direct download URL.",
-      };
+      return { finalUrl: url.toString(), note: "Converted Dropbox link to direct download." };
     }
 
     if (url.hostname === "1drv.ms" || url.hostname.includes("onedrive")) {
-      const onedriveUrl = new URL(urlValue);
-      onedriveUrl.searchParams.set("download", "1");
-      return {
-        finalUrl: onedriveUrl.toString(),
-        note: "Attempted to convert OneDrive link to a direct download URL.",
-      };
+      url.searchParams.set("download", "1");
+      return { finalUrl: url.toString(), note: "Converted OneDrive link to direct download." };
     }
-  } catch {
-    return { finalUrl: urlValue, note: "" };
-  }
+  } catch { /* fall through */ }
 
   return { finalUrl: urlValue, note: "" };
 }
 
 async function resolveGithubRepoArchive(urlValue) {
-  const url = new URL(urlValue);
+  const url   = new URL(urlValue);
   const parts = url.pathname.split("/").filter(Boolean);
 
-  if (url.hostname !== "github.com" || parts.length < 2 || parts.length > 2) {
+  if (url.hostname !== "github.com" || parts.length !== 2) {
     return normalizeGithubUrl(urlValue);
   }
 
   const [owner, repo] = parts;
   const api = `https://api.github.com/repos/${owner}/${repo}`;
 
-  const response = await fetch(api, { headers: { Accept: "application/vnd.github+json" } });
-  if (!response.ok) {
+  try {
+    const res = await fetch(api, { headers: { Accept: "application/vnd.github+json" } });
+    if (!res.ok) throw new Error("API error");
+    const data   = await res.json();
+    const branch = data.default_branch || "main";
+    return `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/${branch}`;
+  } catch {
     return `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/main`;
   }
-
-  const data = await response.json();
-  const branch = data.default_branch || "main";
-  return `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/${branch}`;
 }
 
 async function loadBundleFromUrl(rawUrl) {
-  if (!rawUrl) {
-    setStatus("Paste a URL first.", true);
+  const typedUrl = (rawUrl || "").trim();
+
+  if (!typedUrl) {
+    setStatus("Paste a URL first.", "error");
     return;
   }
 
-  const typedUrl = rawUrl.trim();
-  if (!typedUrl.startsWith("http://") && !typedUrl.startsWith("https://")) {
-    setStatus("URL must start with http:// or https://", true);
+  if (!/^https?:\/\//i.test(typedUrl)) {
+    setStatus("URL must start with http:// or https://", "error");
     return;
   }
 
-  let finalUrl = normalizeGithubUrl(typedUrl);
-  let transformNote = "";
+  let finalUrl      = typedUrl;
+  let transformNote  = "";
+
   try {
-    if (typedUrl.match(/^https:\/\/github\.com\/[^/]+\/[^/]+\/?$/i)) {
-      finalUrl = await resolveGithubRepoArchive(typedUrl);
-      transformNote = "Resolved GitHub repo URL to default-branch archive.";
+    // GitHub repo → archive
+    if (/^https:\/\/github\.com\/[^/]+\/[^/]+\/?$/i.test(typedUrl)) {
+      finalUrl      = await resolveGithubRepoArchive(typedUrl);
+      transformNote = "Resolved GitHub repo to archive.";
+    } else {
+      finalUrl = normalizeGithubUrl(typedUrl);
     }
 
-    const cloudTransform = transformCloudDriveUrl(finalUrl);
-    finalUrl = cloudTransform.finalUrl;
-    transformNote = transformNote || cloudTransform.note;
+    // Cloud drive transforms
+    const cloud   = transformCloudDriveUrl(finalUrl);
+    finalUrl      = cloud.finalUrl;
+    transformNote = transformNote || cloud.note;
 
-    setStatus("Loading bundle from URL (no manual download needed)...");
+    showLoading("Fetching bundle\u2026");
+    setStatus("Loading bundle from URL\u2026", "");
     await startDos(finalUrl);
-    if (transformNote) {
-      setStatus(`Running. ${transformNote}`);
-    }
-  } catch (error) {
-    setStatus(
-      `Could not load URL (${error.message}). Check direct-link format/CORS. If blocked, download locally then upload here.`,
-      true,
-    );
+
+    if (transformNote) setStatus(`Running \u2014 ${transformNote}`, "ok");
+  } catch (err) {
+    hideLoading();
+    setStatus(`Could not load URL: ${err.message}. Try downloading the file and uploading it here.`, "error");
   }
 }
 
-dropzone.addEventListener("dragover", (event) => {
-  event.preventDefault();
+// ── Event listeners ───────────────────────────────────────────────
+
+// Dropzone
+dropzone.addEventListener("dragover", (e) => {
+  e.preventDefault();
   dropzone.classList.add("dragging");
 });
 
@@ -280,61 +320,69 @@ dropzone.addEventListener("dragleave", () => {
   dropzone.classList.remove("dragging");
 });
 
-dropzone.addEventListener("drop", async (event) => {
-  event.preventDefault();
+dropzone.addEventListener("drop", async (e) => {
+  e.preventDefault();
   dropzone.classList.remove("dragging");
-  const [file] = event.dataTransfer.files;
+  const [file] = e.dataTransfer.files;
   await loadUserBundle(file);
 });
 
-bundleInput.addEventListener("change", async (event) => {
-  const [file] = event.target.files;
+bundleInput.addEventListener("change", async (e) => {
+  const [file] = e.target.files;
   await loadUserBundle(file);
-  event.target.value = "";
+  e.target.value = "";
 });
 
-loadUrlBtn.addEventListener("click", async () => {
-  await loadBundleFromUrl(bundleUrlInput.value);
-});
+// URL loader
+loadUrlBtn.addEventListener("click", () => loadBundleFromUrl(bundleUrlInput.value));
 
-bundleUrlInput.addEventListener("keydown", async (event) => {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    await loadBundleFromUrl(bundleUrlInput.value);
+bundleUrlInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    loadBundleFromUrl(bundleUrlInput.value);
   }
 });
 
-document.querySelectorAll(".demo-btn").forEach((button) => {
-  button.addEventListener("click", async () => {
-    const key = button.dataset.demo;
-    const url = demoBundles[key];
-
-    if (!url) {
-      setStatus("Demo not configured.", true);
-      return;
-    }
-
-    setStatus(`Loading ${button.textContent}...`);
-    await startDos(url);
+// Demo buttons — only target buttons that actually have a data-demo attribute
+document.querySelectorAll("[data-demo]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const url = demoBundles[btn.dataset.demo];
+    if (!url) { setStatus("Demo not configured.", "error"); return; }
+    setStatus(`Loading ${btn.textContent}\u2026`, "");
+    startDos(url);
   });
 });
 
-Object.values(settingsFields).forEach((field) => {
-  field.addEventListener("change", persistSettings);
+// Settings persistence
+Object.values(settingsFields).forEach((f) => f.addEventListener("change", persistSettings));
+
+// Stop button
+stopBtn.addEventListener("click", async () => {
+  await stopCurrent();
+  setStatus("Stopped.", "");
 });
 
+// Fullscreen
 fullscreenBtn.addEventListener("click", async () => {
-  const shell = document.getElementById("playerShell");
   if (!document.fullscreenElement) {
-    await shell.requestFullscreen();
-    return;
+    await playerShell.requestFullscreen().catch(() => {});
+    fullscreenBtn.textContent = "Exit Fullscreen";
+  } else {
+    await document.exitFullscreen().catch(() => {});
+    fullscreenBtn.textContent = "Fullscreen";
   }
-  await document.exitFullscreen();
 });
 
+document.addEventListener("fullscreenchange", () => {
+  fullscreenBtn.textContent = document.fullscreenElement ? "Exit Fullscreen" : "Fullscreen";
+});
+
+// Cleanup
 window.addEventListener("beforeunload", () => {
   if (objectUrl) URL.revokeObjectURL(objectUrl);
 });
 
+// ── Init ──────────────────────────────────────────────────────────
 hydrateSettingsUI();
-setStatus("Ready. Load a bundle or try a demo game.");
+showEmptyState(true);
+setStatus("Ready \u2014 load a bundle or try a demo", "");
