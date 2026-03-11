@@ -97,7 +97,7 @@ async function stopCurrent() {
 
 function buildDosboxConf() {
   const s = readSettings();
-  return `\n[sdl]\nfullscreen=false\nfulldouble=true\n\n[dosbox]\nmemsize=${s.memsize}\n\n[cpu]\ncore=auto\ncycles=${s.cycles}\n\n[mixer]\nnosound=${s.sound === "on" ? "false" : "true"}\nrate=44100\nblocksize=2048\nprebuffer=40\n`;
+  return `\n[sdl]\nfullscreen=false\nfulldouble=true\n\n[dosbox]\nmachine=svga_s3\nmemsize=${s.memsize}\n\n[cpu]\ncore=auto\ncycles=${s.cycles}\n\n[mixer]\nnosound=${s.sound === "on" ? "false" : "true"}\nrate=44100\nblocksize=2048\nprebuffer=40\n`;
 }
 
 async function startDos(bundleUrl) {
@@ -222,10 +222,12 @@ async function renderSavesList() {
 
 function normalizeLibraryEntry(entry) {
   const name = String(entry.title || entry.name || "").trim();
+  if (!name) return null;
   const downloadUrl = String(entry.downloadUrl || "").trim();
-  if (!name || !downloadUrl) return null;
+  const sourceUrl = String(entry.sourceUrl || "").trim();
   const links = [];
   if (downloadUrl) links.push({ type: "jsdos", label: "Play", url: downloadUrl });
+  else if (sourceUrl) links.push({ type: "external", label: "Info", url: sourceUrl });
   const id = String(entry.id || name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""));
   return {
     id: id || `game-${Math.random().toString(16).slice(2)}`,
@@ -247,10 +249,6 @@ async function loadExternalLibrary() {
     const data = await response.json();
     if (!Array.isArray(data)) throw new Error("library.json is not an array");
     const imported = data.map(normalizeLibraryEntry).filter(Boolean);
-    if (!imported.length) {
-      allGames = [...BASE_GAMES];
-      return;
-    }
     const merged = [...BASE_GAMES];
     const seen = new Set(merged.map(g => g.id));
     imported.forEach(game => { if (!seen.has(game.id)) { seen.add(game.id); merged.push(game); } });
@@ -327,10 +325,17 @@ function createGameCard(game) {
     btnRow.appendChild(dlBtn);
 
     card.appendChild(btnRow);
+  } else if (playableLink?.type === "external") {
+    const btnRow = document.createElement("div"); btnRow.className = "game-btn-row";
+    const infoBtn = document.createElement("a"); infoBtn.href = playableLink.url; infoBtn.className = "play-btn"; infoBtn.textContent = "Info";
+    infoBtn.target = "_blank"; infoBtn.rel = "noopener noreferrer"; infoBtn.addEventListener("click", e => e.stopPropagation());
+    btnRow.appendChild(infoBtn);
+    card.appendChild(btnRow);
   }
 
   card.addEventListener("click", () => {
     if (!playableLink) return;
+    if (playableLink.type === "external") { window.open(playableLink.url, "_blank", "noopener,noreferrer"); return; }
     setStatus(`Loading ${game.name}...`, "");
     startDos(playableLink.url).then(result => { if (!result.ok && /failed to fetch/i.test(result.errorMessage || "")) setStatus(hintForFetchFailure(playableLink.url), "error"); });
   });
