@@ -223,10 +223,12 @@ async function renderSavesList() {
 
 function normalizeLibraryEntry(entry) {
   const name = String(entry.title || entry.name || "").trim();
+  if (!name) return null;
   const downloadUrl = String(entry.downloadUrl || "").trim();
-  if (!name || !downloadUrl) return null;
+  const sourceUrl = String(entry.sourceUrl || "").trim();
   const links = [];
   if (downloadUrl) links.push({ type: "jsdos", label: "Play", url: downloadUrl });
+  else if (sourceUrl) links.push({ type: "external", label: "Info", url: sourceUrl });
   const id = String(entry.id || name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""));
   return {
     id: id || `game-${Math.random().toString(16).slice(2)}`,
@@ -338,10 +340,20 @@ function createGameCard(game, options = {}) {
     btnRow.appendChild(playBtn);
 
     card.appendChild(btnRow);
+  } else if (playableLink?.type === "external") {
+    const btnRow = document.createElement("div"); btnRow.className = "game-btn-row";
+    const infoBtn = document.createElement("a"); infoBtn.href = playableLink.url; infoBtn.className = "play-btn"; infoBtn.textContent = "Info";
+    infoBtn.target = "_blank"; infoBtn.rel = "noopener noreferrer"; infoBtn.addEventListener("click", e => e.stopPropagation());
+    btnRow.appendChild(infoBtn);
+    card.appendChild(btnRow);
   }
 
   card.addEventListener("click", () => {
     if (!playableLink) return;
+    if (playableLink.type === "external") {
+      window.open(playableLink.url, "_blank", "noopener,noreferrer");
+      return;
+    }
     launchGame(game, { closeLibrary: true, openDownloadOnFetchFail: !showActions });
   });
   return card;
