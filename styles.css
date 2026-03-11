@@ -410,6 +410,53 @@ body {
 }
 
 /* ── Library Section (A:\GAMES) ────────────────────────────────── */
+
+.library-toolbar {
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 0.55rem;
+}
+
+.quick-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.quick-filter {
+  border: 1px solid var(--panel-border);
+  background: rgba(255,255,255,0.02);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 0.18rem 0.42rem;
+  cursor: pointer;
+}
+
+.quick-filter.active,
+.quick-filter:hover {
+  border-color: var(--accent-dim);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.library-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.library-sort {
+  font-size: 0.64rem;
+  color: var(--muted);
+}
+
+#gameSort {
+  font-size: 0.68rem;
+  padding: 0.24rem 0.38rem;
+}
+
 .library-section {
   display: flex;
   flex-direction: column;
@@ -542,6 +589,24 @@ body {
   opacity: 0.75;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+.game-badge {
+  font-size: 0.55rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border: 1px solid var(--panel-border);
+  padding: 0.08rem 0.28rem;
+}
+
+.badge-instant {
+  color: var(--ok);
+  border-color: rgba(105, 208, 134, 0.45);
+  background: rgba(105, 208, 134, 0.12);
+}
+
+.badge-manual {
+  color: var(--muted);
 }
 
 .game-links {

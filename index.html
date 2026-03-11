@@ -61,6 +61,20 @@
             <input id="gameSearch" type="search" placeholder="Search library..." aria-label="Search games" />
           </div>
         </div>
+        <div class="library-toolbar">
+          <div id="gameQuickFilters" class="quick-filters" aria-label="Quick game filters"></div>
+          <div class="library-row">
+            <label class="library-sort" for="gameSort">Sort</label>
+            <select id="gameSort">
+              <option value="name">Name</option>
+              <option value="year">Year</option>
+              <option value="source">Source</option>
+            </select>
+            <button id="randomPlayBtn" class="action-btn" type="button">Random Play</button>
+          </div>
+          <p class="small-note">Showing <strong id="visibleGamesCount">0</strong> games • <strong
+              id="instantGamesCount">0</strong> 1-click ready.</p>
+        </div>
         <div id="gameGrid" class="game-grid">
           <!-- Populated by app.js -->
         </div>
