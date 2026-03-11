@@ -84,6 +84,24 @@ function closeOrphanedAudioContexts() {
   try { dom.playerHost.querySelectorAll("canvas").forEach(c => c.audioCtx?.state !== "closed" && c.audioCtx.close().catch(() => { })); } catch { }
 }
 
+function applySoundSetting() {
+  const muted = readSettings().sound === "off";
+  try {
+    if (window.audioContext && window.audioContext.state !== "closed") {
+      if (muted && window.audioContext.state === "running") window.audioContext.suspend().catch(() => { });
+      if (!muted && window.audioContext.state === "suspended") window.audioContext.resume().catch(() => { });
+    }
+  } catch { }
+  try {
+    dom.playerHost.querySelectorAll("canvas").forEach(c => {
+      if (c.audioCtx && c.audioCtx.state !== "closed") {
+        if (muted && c.audioCtx.state === "running") c.audioCtx.suspend().catch(() => { });
+        if (!muted && c.audioCtx.state === "suspended") c.audioCtx.resume().catch(() => { });
+      }
+    });
+  } catch { }
+}
+
 async function stopCurrent() {
   hideLoading();
   if (state.ci) {
@@ -112,7 +130,7 @@ async function startDos(bundleUrl) {
     if (!ci) throw new Error("Dos initialization returned null");
     state.ci = ci; state.isRunning = true; state.currentBundle = bundleUrl; updateUI();
     ci.events?.().onTerminate(() => stopCurrent().then(() => showEmptyState(true)));
-    hideLoading(); setStatus("System Ready - Drive A:", "ok"); return { ok: true };
+    hideLoading(); setStatus("System Ready - Drive A:", "ok"); setTimeout(applySoundSetting, 200); return { ok: true };
   } catch (err) {
     if (handleExitStatus(err)) { await stopCurrent(); return { ok: true }; }
     hideLoading(); setStatus(`System Error: ${err.message || "Unknown"}`, "error"); state.isRunning = false; updateUI();
@@ -385,7 +403,7 @@ function setupEventListeners() {
   dom.stopBtn?.addEventListener("click", () => stopCurrent().then(() => setStatus("Stopped")));
   dom.saveBtn?.addEventListener("click", saveGameState);
   dom.fullscreenBtn?.addEventListener("click", () => !document.fullscreenElement ? dom.playerShell?.requestFullscreen() : document.exitFullscreen());
-  Object.values(settingsFields).forEach(f => f?.addEventListener("change", persistSettings));
+  Object.values(settingsFields).forEach(f => f?.addEventListener("change", () => { persistSettings(); applySoundSetting(); }));
 }
 
 window.addEventListener("unhandledrejection", event => { if (handleExitStatus(event.reason)) event.preventDefault(); });
