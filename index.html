@@ -56,26 +56,11 @@
 
       <div class="library-section">
         <div class="section-header">
-          <p class="section-title">A:\GAMES</p>
-          <div class="search-box">
-            <input id="gameSearch" type="search" placeholder="Search library..." aria-label="Search games" />
-          </div>
+          <p class="section-title">Featured on A:\GAMES</p>
+          <button id="openLibraryBtn" class="ghost-btn" type="button">Open Library</button>
         </div>
-        <div class="library-toolbar">
-          <div id="gameQuickFilters" class="quick-filters" aria-label="Quick game filters"></div>
-          <div class="library-row">
-            <label class="library-sort" for="gameSort">Sort</label>
-            <select id="gameSort">
-              <option value="name">Name</option>
-              <option value="year">Year</option>
-              <option value="source">Source</option>
-            </select>
-            <button id="randomPlayBtn" class="action-btn" type="button">Random Play</button>
-          </div>
-          <p class="small-note">Showing <strong id="visibleGamesCount">0</strong> games • <strong
-              id="instantGamesCount">0</strong> 1-click ready.</p>
-        </div>
-        <div id="gameGrid" class="game-grid">
+        <p class="small-note">Quick picks only on home screen. Open full library for search and filters.</p>
+        <div id="featuredGameGrid" class="game-grid featured-grid">
           <!-- Populated by app.js -->
         </div>
       </div>
@@ -129,18 +114,18 @@
         <div id="emptyState" class="empty-state">
           <div class="empty-state-art" aria-hidden="true">
             ________________________________________
-            / \
-            | _____ _ _ __ __ |
-            | / __ \ | | / \ \ \ / / |
-            | | / \/ | | / ^ \ \ \_/ / |
-            | | | | | / /_\ \ \ / |
-            | | \__/\ | |___/ / \ \ | | |
-            | \____/ \____/_/ \__\ \_/ |
-            | |
-            | C:\> CD GAMES |
-            | C:\GAMES> DIR |
-            | |
-            | [SYSTEM READY] |
+            /                                        \
+            |   _____ ____ _      ____  _           |
+            |  / __  \\  _ \\ |    / __ \\ \ \ /\ / / |
+            | | /  \/| |_) | |   / /  \ \ \ V  V /  |
+            | | |    |  __/| |  | |    | | \ /\ /   |
+            | | \__/\| |   | |__| \__/\| | | | |    |
+            |  \____/|_|   |_____\____/|_| |_| |_|    |
+            |                                        |
+            | C:\> CD GAMES                          |
+            | C:\GAMES> DIR                          |
+            |                                        |
+            | [SYSTEM READY]                         |
             \________________________________________/
           </div>
           <p>Pick a game from the <strong>A:\GAMES</strong> drive or drop a <kbd>.jsdos</kbd> file to begin.</p>
@@ -148,6 +133,35 @@
       </div>
     </section>
   </main>
+
+  <div id="libraryModal" class="library-modal" hidden>
+    <div class="library-modal__panel" role="dialog" aria-modal="true" aria-labelledby="libraryModalTitle">
+      <div class="library-modal__header">
+        <p id="libraryModalTitle" class="section-title">A:\GAMES Full Library</p>
+        <button id="closeLibraryBtn" class="ghost-btn" type="button">Close</button>
+      </div>
+      <div class="section-header">
+        <div class="search-box">
+          <input id="gameSearch" type="search" placeholder="Search library..." aria-label="Search games" />
+        </div>
+      </div>
+      <div class="library-toolbar">
+        <div id="gameQuickFilters" class="quick-filters" aria-label="Quick game filters"></div>
+        <div class="library-row">
+          <label class="library-sort" for="gameSort">Sort</label>
+          <select id="gameSort">
+            <option value="name">Name</option>
+            <option value="year">Year</option>
+            <option value="source">Source</option>
+          </select>
+          <button id="randomPlayBtn" class="action-btn" type="button">Random Play</button>
+        </div>
+        <p class="small-note">Showing <strong id="visibleGamesCount">0</strong> games • <strong
+            id="instantGamesCount">0</strong> 1-click ready.</p>
+      </div>
+      <div id="gameGrid" class="game-grid library-grid"></div>
+    </div>
+  </div>
 
   <script src="https://v8.js-dos.com/latest/js-dos.js"></script>
   <script type="module" src="./app.js"></script>
