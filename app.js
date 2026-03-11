@@ -152,7 +152,7 @@ async function loadBundleFromUrl(rawUrl) {
 
 const DB_NAME = "cplay-saves-db"; const STORE_NAME = "saves";
 function openDatabase() { return new Promise((resolve, reject) => { const req = indexedDB.open(DB_NAME, 1); req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains(STORE_NAME)) req.result.createObjectStore(STORE_NAME, { keyPath: "id" }); }; req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error); }); }
-async function dbTransaction(mode, handler) { const db = await openDatabase(); return new Promise((resolve, reject) => { const tx = db.transaction(STORE_NAME, mode); const store = tx.objectStore(STORE_NAME); handler(store, resolve, reject); tx.onerror = () => reject(tx.error); }); }
+async function dbTransaction(mode, handler) { const db = await openDatabase(); return new Promise((resolve, reject) => { const tx = db.transaction(STORE_NAME, mode); const store = tx.objectStore(STORE_NAME); handler(store, (val) => { db.close(); resolve(val); }, (err) => { db.close(); reject(err); }); tx.onerror = () => { db.close(); reject(tx.error); }; }); }
 const getAllSaves = () => dbTransaction("readonly", (store, resolve) => { const req = store.getAll(); req.onsuccess = () => resolve(req.result.sort((a, b) => b.timestamp - a.timestamp)); });
 const putSave = save => dbTransaction("readwrite", (store, resolve) => { const req = store.put(save); req.onsuccess = () => resolve(); });
 const deleteSave = id => dbTransaction("readwrite", (store, resolve) => { const req = store.delete(id); req.onsuccess = () => resolve(); });
