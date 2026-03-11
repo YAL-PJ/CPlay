@@ -8,6 +8,27 @@ const LIST_PAGES = [
   { license: "Shareware", url: "https://www.dosgamesarchive.com/licenses/shareware/" }
 ];
 
+async function resolveFileUrl(downloadPageUrl, throttleMs) {
+  if (!downloadPageUrl) return "";
+  if (/\.(zip|rar|7z|exe)$/i.test(downloadPageUrl)) return downloadPageUrl;
+  try {
+    await wait(throttleMs);
+    const html = await fetchHtml(downloadPageUrl);
+    const $ = cheerio.load(html);
+    const fileLink =
+      $('a[href$=".zip"]').first().attr("href") ||
+      $('a[href$=".ZIP"]').first().attr("href") ||
+      $('a:contains("click here")').first().attr("href") ||
+      $('a:contains("Click here")').first().attr("href") ||
+      $('a:contains("download")').filter((_, el) => /\.(zip|rar|7z|exe)/i.test($(el).attr("href") || "")).first().attr("href") ||
+      "";
+    if (!fileLink) return downloadPageUrl;
+    return new URL(fileLink, downloadPageUrl).toString();
+  } catch {
+    return downloadPageUrl;
+  }
+}
+
 function parseYear(value = "") {
   const year = Number(String(value).match(/\d{4}/)?.[0]);
   return Number.isFinite(year) ? year : null;
@@ -43,7 +64,8 @@ export async function scrapeDosGamesArchive({ outputPath, throttleMs = 300 }) {
       const year = parseYear(textDump);
       const genre = pickGenre($$("a[href*='/genres/']").first().text().trim() || "Other");
       const downloadHref = $$('a:contains("Download")').first().attr("href") || $$('a[href*="/download/"]').first().attr("href") || null;
-      const sourceDownloadUrl = downloadHref ? new URL(downloadHref, detailUrl).toString() : "";
+      const downloadPageUrl = downloadHref ? new URL(downloadHref, detailUrl).toString() : "";
+      const sourceDownloadUrl = await resolveFileUrl(downloadPageUrl, throttleMs);
       const slug = slugify(title, { lower: true, strict: true }) || slugify(detailUrl.split("/").filter(Boolean).pop() || "game", { lower: true, strict: true });
 
       const entry = {
