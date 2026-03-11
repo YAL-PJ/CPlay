@@ -10,9 +10,13 @@
     "sourceUrl": "https://www.dosgamesarchive.com/game/alex-the-allegator-2/",
     "sourceDownloadUrl": "https://www.dosgamesarchive.com/download/alex-the-allegator-2/",
     "metadataOnly": true,
-    "status": "metadata-only",
+    "status": "failed",
     "downloadUrl": "",
-    "tags": ["freeware", "dos", "starter"]
+    "tags": [
+      "freeware",
+      "dos",
+      "starter"
+    ]
   },
   {
     "id": "agi-tetris",
@@ -25,9 +29,13 @@
     "sourceUrl": "https://www.dosgamesarchive.com/game/agi-tetris/",
     "sourceDownloadUrl": "https://www.dosgamesarchive.com/download/agi-tetris/",
     "metadataOnly": true,
-    "status": "metadata-only",
+    "status": "failed",
     "downloadUrl": "",
-    "tags": ["freeware", "dos", "starter"]
+    "tags": [
+      "freeware",
+      "dos",
+      "starter"
+    ]
   },
   {
     "id": "bio-menace",
@@ -40,9 +48,13 @@
     "sourceUrl": "https://www.dosgamesarchive.com/game/bio-menace/",
     "sourceDownloadUrl": "https://www.dosgamesarchive.com/download/bio-menace/",
     "metadataOnly": true,
-    "status": "metadata-only",
+    "status": "failed",
     "downloadUrl": "",
-    "tags": ["freeware", "dos", "starter"]
+    "tags": [
+      "freeware",
+      "dos",
+      "starter"
+    ]
   },
   {
     "id": "overkill",
@@ -55,9 +67,13 @@
     "sourceUrl": "https://www.dosgamesarchive.com/game/overkill/",
     "sourceDownloadUrl": "https://www.dosgamesarchive.com/download/overkill/",
     "metadataOnly": true,
-    "status": "metadata-only",
+    "status": "failed",
     "downloadUrl": "",
-    "tags": ["freeware", "dos", "starter"]
+    "tags": [
+      "freeware",
+      "dos",
+      "starter"
+    ]
   },
   {
     "id": "supaplex",
@@ -70,9 +86,13 @@
     "sourceUrl": "https://www.dosgamesarchive.com/game/supaplex/",
     "sourceDownloadUrl": "https://www.dosgamesarchive.com/download/supaplex/",
     "metadataOnly": true,
-    "status": "metadata-only",
+    "status": "failed",
     "downloadUrl": "",
-    "tags": ["freeware", "dos", "starter"]
+    "tags": [
+      "freeware",
+      "dos",
+      "starter"
+    ]
   },
   {
     "id": "liero",
@@ -85,8 +105,12 @@
     "sourceUrl": "https://www.dosgamesarchive.com/game/liero/",
     "sourceDownloadUrl": "https://www.dosgamesarchive.com/download/liero/",
     "metadataOnly": true,
-    "status": "metadata-only",
+    "status": "failed",
     "downloadUrl": "",
-    "tags": ["freeware", "dos", "starter"]
+    "tags": [
+      "freeware",
+      "dos",
+      "starter"
+    ]
   }
 ]
