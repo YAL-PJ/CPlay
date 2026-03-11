@@ -574,16 +574,58 @@ function captureScreenshot() {
   } catch { return null; }
 }
 
+function toUint8Array(data) {
+  if (!data) return null;
+  if (data instanceof Uint8Array) return data;
+  if (data instanceof ArrayBuffer) return new Uint8Array(data);
+  if (ArrayBuffer.isView(data)) {
+    return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+  }
+  if (Array.isArray(data)) return new Uint8Array(data);
+  if (data && typeof data === "object") {
+    // js-dos API variants may return wrapped payloads
+    if (data.data) return toUint8Array(data.data);
+    if (data.state) return toUint8Array(data.state);
+    if (data.buffer) return toUint8Array(data.buffer);
+  }
+  return null;
+}
+
+async function getEmulatorSaveData(ci) {
+  if (!ci) return null;
+
+  // Newer / alternate API shape
+  if (typeof ci.save === "function") {
+    try {
+      const saved = await ci.save();
+      const bytes = toUint8Array(saved);
+      if (bytes && bytes.length) return bytes;
+    } catch (err) {
+      logError("ci.save() failed:", err);
+    }
+  }
+
+  // Legacy v8 API shape
+  if (typeof ci.persist === "function") {
+    try {
+      const persisted = await ci.persist();
+      const bytes = toUint8Array(persisted);
+      if (bytes && bytes.length) return bytes;
+    } catch (err) {
+      logError("ci.persist() failed:", err);
+    }
+  }
+
+  return null;
+}
+
 async function saveGameState() {
   if (!state.ci || !state.isRunning) {
     setStatus("Nothing running.", "error");
     return;
   }
 
-  let stateData = null;
-  if (typeof state.ci.persist === "function") {
-    try { stateData = await state.ci.persist(); } catch { }
-  }
+  const stateData = await getEmulatorSaveData(state.ci);
 
   if (!stateData) {
     setStatus("Save not supported.", "error");
@@ -607,7 +649,7 @@ async function saveGameState() {
     timestamp: Date.now(),
     bundleUrl: state.currentBundle,
     screenshot,
-    state: Array.from(stateData instanceof Uint8Array ? stateData : new Uint8Array(stateData)),
+    state: Array.from(stateData),
   };
 
   try {
