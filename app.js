@@ -32,20 +32,24 @@ const settingsFields = {
 
 const GAMES = [
   { id: "doom-shareware", name: "DOOM (Shareware)", source: "js-dos", category: "fps", year: 1993, instantPlay: true, icon: "./assets/doom.png", links: [{ type: "jsdos", label: "Play", url: "https://v8.js-dos.com/bundles/doom.jsdos" }, { type: "site", label: "Listing", url: "https://js-dos.com/games/doom.exe.html" }] },
+  { id: "doom2", name: "DOOM II", source: "dos-zone", category: "fps", year: 1994, instantPlay: true, icon: "", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/custom/dos/doom2.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/doom-ii/" }] },
+  { id: "wolf3d", name: "Wolfenstein 3D", source: "dos-zone", category: "fps", year: 1992, instantPlay: true, icon: "", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/a/ac888d1660aa253f0ed53bd6c962c894125aaa19.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/wolfenstein-3d/" }] },
+  { id: "heretic", name: "Heretic", source: "dos-zone", category: "fps", year: 1994, instantPlay: true, icon: "", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/custom/dos/heretic.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/heretic/" }] },
+  { id: "prince-of-persia", name: "Prince of Persia", source: "dos-zone", category: "platformer", year: 1989, instantPlay: true, icon: "", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/1/1179a7c9e05b1679333ed6db08e7884f6e86c155.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/prince-of-persia/" }] },
   { id: "digger", name: "Digger", source: "js-dos", category: "arcade", year: 1983, instantPlay: true, icon: "./assets/digger.png", links: [{ type: "jsdos", label: "Play", url: "https://v8.js-dos.com/bundles/digger.jsdos" }, { type: "site", label: "Listing", url: "https://js-dos.com/games/digger.exe.html" }] },
-  { id: "tyrian-2000", name: "Tyrian 2000", source: "dos-zone", category: "shooter", year: 1999, instantPlay: true, icon: "https://cdn.dos.zone/original/2X/8/873f982855118f62f1cc056f707f1412354a32d7.png", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/custom/dos/tyrian-2000.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/tyrian-2000/" }] },
-  { id: "sim-city", name: "SimCity", source: "dos-zone", category: "strategy", year: 1989, instantPlay: true, icon: "https://cdn.dos.zone/original/2X/3/3b0a82062905f72648a4d492ccc2526d039b3702.png", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/7/744842062905f72648a4d492ccc2526d039b3702.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/simcity/" }] },
-  { id: "lost-vikings", name: "The Lost Vikings", source: "dos-zone", category: "puzzle", year: 1992, instantPlay: true, icon: "https://cdn.dos.zone/original/2X/b/b5a5b1b063b2520052ebb504184667ac95e724233.png", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/1/1b063b2520052ebb504184667ac95e72423331de.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/the-lost-vikings/" }] },
-  { id: "out-of-this-world", name: "Out of This World", source: "dos-zone", category: "cinematic", year: 1991, instantPlay: true, icon: "https://cdn.dos.zone/original/2X/1/1031eb810e8b648fc5f777b3bd9cbc0187927fd4.png", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/1/1031eb810e8b648fc5f777b3bd9cbc0187927fd4.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/out-of-this-world/" }] },
-  { id: "nfs-se", name: "Need for Speed: SE", source: "dos-zone", category: "racing", year: 1996, instantPlay: true, icon: "https://cdn.dos.zone/original/2X/e/e35f8e07173e13028290f653456073c681816f1d0.png", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/custom/dos/nfs.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/need-for-speed-se/" }] },
-  { id: "stunts", name: "Stunts", source: "dos-zone", category: "racing", year: 1990, instantPlay: true, icon: "https://cdn.dos.zone/original/2X/6/6b34e7f53fafe923a4d95fba9f7723809983ec07.png", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/6/6b34e7f53fafe923a4d95fba9f7723809983ec07.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/stunts/" }] },
-  { id: "supaplex", name: "Supaplex", source: "dos-zone", category: "puzzle", year: 1991, instantPlay: true, icon: "https://cdn.dos.zone/original/2X/6/6cf9863e2c1cc57f27cf70113972303e5bb4a4b8.png", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/6/6cf9863e2c1cc57f27cf70113972303e5bb4a4b8.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/supaplex/" }] },
-  { id: "xonix", name: "Xonix", source: "dos-zone", category: "arcade", year: 1990, instantPlay: true, icon: "https://cdn.dos.zone/original/2X/4/48957d89fb4e89c80e6a2f4cf95f4ccf28305cb7.png", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/4/48957d89fb4e89c80e6a2f4cf95f4ccf28305cb7.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/xonix/" }] },
-  { id: "jazz-jackrabbit", name: "Jazz Jackrabbit", source: "dos-zone", category: "platformer", year: 1994, instantPlay: true, icon: "https://cdn.dos.zone/original/2X/2/2cd7e4fe5905f8f5a5c678d5f7f91ea2d9ef2dd4.png", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/2/2cd7e4fe5905f8f5a5c678d5f7f91ea2d9ef2dd4.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/jazz-jackrabbit/" }] },
-  { id: "prince-of-persia", name: "Prince of Persia", source: "dos-zone", category: "platformer", year: 1989, instantPlay: true, icon: "https://cdn.dos.zone/original/2X/b/b5a4ff4a66f38f9f684f7ad6699f378e2f95f286.png", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/b/b5a4ff4a66f38f9f684f7ad6699f378e2f95f286.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/prince-of-persia/" }] },
-  { id: "wolf3d", name: "Wolfenstein 3D", source: "dos-zone", category: "fps", year: 1992, instantPlay: true, icon: "https://cdn.dos.zone/original/2X/5/52f8d6cae598bcf0f7116c10bc8cc5e3c4a9a25f.png", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/5/52f8d6cae598bcf0f7116c10bc8cc5e3c4a9a25f.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/wolfenstein-3d/" }] },
-  { id: "hexen", name: "Hexen", source: "dos-zone", category: "fps", year: 1995, instantPlay: true, icon: "https://cdn.dos.zone/original/2X/5/5d04634cb66f6b4bbd53d64389a8fd9f6f1deec3.png", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/5/5d04634cb66f6b4bbd53d64389a8fd9f6f1deec3.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/hexen/" }] },
-  { id: "pinball", name: "Pinball Fantasies", source: "classicdosgames", category: "arcade", year: 1992, instantPlay: false, icon: "./assets/pinball.png", links: [{ type: "site", label: "ClassicDOS", url: "https://www.classicdosgames.com/game/Pinball_Fantasies.html" }] }
+  { id: "mortal-kombat", name: "Mortal Kombat", source: "dos-zone", category: "fighting", year: 1993, instantPlay: true, icon: "", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/8/872f3668c36085d0b1ace46872145285364ee628.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/mortal-kombat/" }] },
+  { id: "tyrian-2000", name: "Tyrian 2000", source: "dos-zone", category: "shooter", year: 1999, instantPlay: true, icon: "", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/custom/dos/tyrian-2000.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/tyrian-2000/" }] },
+  { id: "sim-city", name: "SimCity", source: "dos-zone", category: "strategy", year: 1989, instantPlay: true, icon: "", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/7/744842062905f72648a4d492ccc2526d039b3702.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/simcity/" }] },
+  { id: "nfs-se", name: "Need for Speed: SE", source: "dos-zone", category: "racing", year: 1996, instantPlay: true, icon: "", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/custom/dos/nfs.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/need-for-speed-se/" }] },
+  { id: "lost-vikings", name: "The Lost Vikings", source: "dos-zone", category: "puzzle", year: 1992, instantPlay: true, icon: "", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/1/1b063b2520052ebb504184667ac95e72423331de.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/the-lost-vikings/" }] },
+  { id: "out-of-this-world", name: "Out of This World", source: "dos-zone", category: "cinematic", year: 1991, instantPlay: true, icon: "", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/1/1031eb810e8b648fc5f777b3bd9cbc0187927fd4.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/out-of-this-world/" }] },
+  { id: "gta", name: "Grand Theft Auto", source: "dos-zone", category: "action", year: 1997, instantPlay: true, icon: "", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/custom/dos/gta-mobile.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/grand-theft-auto/" }] },
+  { id: "stunts", name: "Stunts", source: "dos-zone", category: "racing", year: 1990, instantPlay: false, icon: "", links: [{ type: "site", label: "DOS.Zone", url: "https://dos.zone/stunts/" }] },
+  { id: "supaplex", name: "Supaplex", source: "dos-zone", category: "puzzle", year: 1991, instantPlay: false, icon: "", links: [{ type: "site", label: "DOS.Zone", url: "https://dos.zone/supaplex/" }] },
+  { id: "xonix", name: "Xonix", source: "dos-zone", category: "arcade", year: 1990, instantPlay: false, icon: "", links: [{ type: "site", label: "DOS.Zone", url: "https://dos.zone/xonix/" }] },
+  { id: "jazz-jackrabbit", name: "Jazz Jackrabbit", source: "dos-zone", category: "platformer", year: 1994, instantPlay: false, icon: "", links: [{ type: "site", label: "DOS.Zone", url: "https://dos.zone/jazz-jackrabbit/" }] },
+  { id: "hexen", name: "Hexen", source: "dos-zone", category: "fps", year: 1995, instantPlay: false, icon: "", links: [{ type: "site", label: "DOS.Zone", url: "https://dos.zone/hexen/" }] },
+  { id: "pinball", name: "Pinball Fantasies", source: "classicdosgames", category: "arcade", year: 1992, instantPlay: false, icon: "./assets/pinball.png", links: [{ type: "site", label: "ClassicDOS", url: "https://www.classicdosgames.com/game/Pinball_Fantasies.html" }] },
 ];
 
 const QUICK_FILTERS = [
@@ -185,7 +189,10 @@ async function renderSavesList() {
     saves.forEach(save => {
       const el = document.createElement("div"); el.className = "save-card";
       if (save.screenshot) { const img = document.createElement("img"); img.src = save.screenshot; img.className = "save-thumb"; el.appendChild(img); }
-      const info = document.createElement("div"); info.className = "save-info"; info.innerHTML = `<span class="save-name">${save.name}</span><span class="save-date">${new Date(save.timestamp).toLocaleString()}</span>`; el.appendChild(info);
+      const info = document.createElement("div"); info.className = "save-info";
+      const saveName = document.createElement("span"); saveName.className = "save-name"; saveName.textContent = save.name; info.appendChild(saveName);
+      const saveDate = document.createElement("span"); saveDate.className = "save-date"; saveDate.textContent = new Date(save.timestamp).toLocaleString(); info.appendChild(saveDate);
+      el.appendChild(info);
       const actions = document.createElement("div"); actions.className = "save-actions";
       const loadBtn = document.createElement("button"); loadBtn.className = "action-btn"; loadBtn.textContent = "Load"; loadBtn.addEventListener("click", () => loadGameState(save.id));
       const delBtn = document.createElement("button"); delBtn.className = "ghost-btn"; delBtn.textContent = "Del"; delBtn.addEventListener("click", () => confirm("Delete this save?") && deleteSave(save.id).then(renderSavesList));
@@ -230,27 +237,38 @@ function renderGameGrid(filter = "") {
   dom.gameGrid.innerHTML = "";
   filtered.forEach(game => {
     const card = document.createElement("article"); card.className = "game-card";
-    card.innerHTML = `
-      <div class="game-icon-container"><img src="${game.icon}" class="game-thumb" alt="${game.name} cover" /></div>
-      <span class="game-label">${game.name}</span>
-      <span class="game-source">${game.source} • ${game.year}</span>
-      <span class="game-badge ${game.instantPlay ? "badge-instant" : "badge-manual"}">${game.instantPlay ? "1-Click" : "Manual"}</span>
-      <div class="game-links"></div>
-    `;
-    const img = card.querySelector("img"); img.addEventListener("error", () => { img.src = FALLBACK_ICON; }, { once: true });
-    const linksRow = card.querySelector(".game-links");
+
+    const iconWrap = document.createElement("div"); iconWrap.className = "game-icon-container";
+    const img = document.createElement("img"); img.src = game.icon || FALLBACK_ICON; img.className = "game-thumb"; img.alt = game.name + " cover";
+    img.addEventListener("error", () => { img.src = FALLBACK_ICON; }, { once: true });
+    iconWrap.appendChild(img); card.appendChild(iconWrap);
+
+    const label = document.createElement("span"); label.className = "game-label"; label.textContent = game.name; card.appendChild(label);
+    const source = document.createElement("span"); source.className = "game-source"; source.textContent = `${game.source} \u2022 ${game.year}`; card.appendChild(source);
+    const badge = document.createElement("span"); badge.className = "game-badge " + (game.instantPlay ? "badge-instant" : "badge-manual"); badge.textContent = game.instantPlay ? "1-Click" : "Manual"; card.appendChild(badge);
+
+    const linksRow = document.createElement("div"); linksRow.className = "game-links";
     game.links.forEach(link => {
       const linkEl = document.createElement("a"); linkEl.href = link.url; linkEl.target = "_blank"; linkEl.rel = "noopener noreferrer"; linkEl.textContent = link.label; linkEl.className = "mini-link"; linkEl.addEventListener("click", e => e.stopPropagation()); linksRow.appendChild(linkEl);
     });
+    card.appendChild(linksRow);
 
     const playableLink = getPlayableLink(game);
     if (playableLink?.type === "jsdos" || playableLink?.type === "zip") {
+      const btnRow = document.createElement("div"); btnRow.className = "game-btn-row";
+
       const playBtn = document.createElement("button"); playBtn.type = "button"; playBtn.className = "play-btn"; playBtn.textContent = "Play";
       playBtn.addEventListener("click", e => {
         e.stopPropagation(); setStatus(`Loading ${game.name}...`, "");
         startDos(playableLink.url).then(result => { if (!result.ok && /failed to fetch/i.test(result.errorMessage || "")) { setStatus(hintForFetchFailure(playableLink.url), "error"); window.open(playableLink.url, "_blank", "noopener,noreferrer"); } });
       });
-      card.appendChild(playBtn);
+      btnRow.appendChild(playBtn);
+
+      const dlBtn = document.createElement("a"); dlBtn.href = playableLink.url; dlBtn.className = "dl-btn"; dlBtn.textContent = "\u2B07"; dlBtn.title = "Download .jsdos bundle";
+      dlBtn.setAttribute("download", ""); dlBtn.addEventListener("click", e => e.stopPropagation());
+      btnRow.appendChild(dlBtn);
+
+      card.appendChild(btnRow);
     }
 
     card.addEventListener("click", () => window.open(game.links[0].url, "_blank", "noopener,noreferrer"));

@@ -645,6 +645,33 @@ body {
   filter: brightness(1.08);
 }
 
+.game-btn-row {
+  display: flex;
+  gap: 0.25rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.dl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  border-radius: 2px;
+  padding: 0.15rem 0.3rem;
+  text-decoration: none;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.dl-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+}
+
 /* ── Forms ─────────────────────────────────────────────────────── */
 input,
 select {
