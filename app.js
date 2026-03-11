@@ -45,31 +45,13 @@ const settingsFields = {
 // ── Constants ─────────────────────────────────────────────────────
 const GAMES = [
   { id: "doom", name: "DOOM", url: "https://v8.js-dos.com/bundles/doom.jsdos", icon: "./assets/doom.png" },
-  { id: "doom2", name: "DOOM II", url: "https://v8.js-dos.com/bundles/doom2.jsdos", icon: "https://cdn.dos.zone/original/2X/2/2361ac834925828ed983bf9f62650051e8a834f3.png" },
-  { id: "wolf3d", name: "Wolfenstein 3D", url: "https://v8.js-dos.com/bundles/wolf3d.jsdos", icon: "https://cdn.dos.zone/original/2X/2/22744781df3e042733d74c83fc65611488c5a2c2.png" },
-  { id: "prince", name: "Prince of Persia", url: "https://v8.js-dos.com/bundles/prince.jsdos", icon: "https://cdn.dos.zone/original/2X/d/d783f982855118f62f1cc056f707f1412354a32.png" },
   { id: "digger", name: "Digger", url: "https://v8.js-dos.com/bundles/digger.jsdos", icon: "./assets/digger.png" },
-  { id: "pinball", name: "Epic Pinball", url: "https://v8.js-dos.com/bundles/pinball.jsdos", icon: "./assets/pinball.png" },
   { id: "mortal", name: "Mortal Kombat", url: "https://cdn.dos.zone/original/2X/8/872f3668c36085d0b1ace46872145285364ee628.jsdos", icon: "https://cdn.dos.zone/original/2X/c/cf8a8d1660aa253f0ed53bd6c962c894125aaa19.png" },
-  { id: "gta", name: "Grand Theft Auto", url: "https://cdn.dos.zone/published/br.ayccfy.GTA_3Dfx.jsdos", icon: "https://cdn.dos.zone/original/2X/b/b3f6842062905f72648a4d492ccc2526d039b3702.png" },
   { id: "simcity", name: "Sim City", url: "https://cdn.dos.zone/original/2X/7/744842062905f72648a4d492ccc2526d039b3702.jsdos", icon: "https://cdn.dos.zone/original/2X/3/3b0a82062905f72648a4d492ccc2526d039b3702.png" },
   { id: "nfs", name: "Need For Speed", url: "https://cdn.dos.zone/custom/dos/nfs.jsdos", icon: "https://cdn.dos.zone/original/2X/e/e35f8e07173e13028290f653456073c681816f1d0.png" },
   { id: "tyrian", name: "Tyrian 2000", url: "https://cdn.dos.zone/custom/dos/tyrian-2000.jsdos", icon: "https://cdn.dos.zone/original/2X/8/873f982855118f62f1cc056f707f1412354a32d7.png" },
   { id: "lostvikings", name: "The Lost Vikings", url: "https://cdn.dos.zone/original/2X/1/1b063b2520052ebb504184667ac95e72423331de.jsdos", icon: "https://cdn.dos.zone/original/2X/b/b5a5b1b063b2520052ebb504184667ac95e724233.png" },
   { id: "anotherworld", name: "Out of This World", url: "https://cdn.dos.zone/original/2X/1/1031eb810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/1/1031eb810e8b648fc5f777b3bd9cbc0187927fd4.png" },
-  { id: "keen1", name: "Commander Keen 1", url: "https://cdn.dos.zone/original/2X/4/4c810e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/4/4c810e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
-  { id: "keen4", name: "Commander Keen 4", url: "https://cdn.dos.zone/original/2X/b/b8010e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/b/b8010e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
-  { id: "lemmings", name: "Lemmings", url: "https://v8.js-dos.com/bundles/lemmings.jsdos", icon: "https://cdn.dos.zone/original/2X/3/3d010e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
-  { id: "civilization", name: "Sid Meier's Civilization", url: "https://v8.js-dos.com/bundles/civilization.jsdos", icon: "https://cdn.dos.zone/original/2X/c/c1010e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
-  { id: "oregon", name: "The Oregon Trail", url: "https://v8.js-dos.com/bundles/oregon.jsdos", icon: "https://cdn.dos.zone/original/2X/o/o1010e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
-  { id: "warcraft", name: "Warcraft: Orcs & Humans", url: "https://cdn.dos.zone/original/2X/w/w1010e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/w/w1110e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
-  { id: "aladdin", name: "Aladdin", url: "https://cdn.dos.zone/original/2X/a/a110e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/a/a110e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
-  { id: "jazz", name: "Jazz Jackrabbit", url: "https://v8.js-dos.com/bundles/jazz.jsdos", icon: "https://cdn.dos.zone/original/2X/j/j110e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
-  { id: "earthworm", name: "Earthworm Jim", url: "https://cdn.dos.zone/original/2X/e/e110e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/e/e110e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
-  { id: "descent", name: "Descent", url: "https://cdn.dos.zone/original/2X/d/d110e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/d/d110e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
-  { id: "quake", name: "Quake (Shareware)", url: "https://cdn.dos.zone/original/2X/q/q110e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/q/q110e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
-  { id: "scorched", name: "Scorched Earth", url: "https://cdn.dos.zone/original/2X/s/s110e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/s/s110e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
-  { id: "simcity2000", name: "SimCity 2000", url: "https://cdn.dos.zone/original/2X/s/s220e810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/s/s220e810e8b648fc5f777b3bd9cbc0187927fd4.png" },
 ];
 
 const defaultSettings = {
@@ -145,6 +127,12 @@ function updateUI() {
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
 }
 
 // ── Settings ──────────────────────────────────────────────────────
@@ -247,7 +235,6 @@ async function stopCurrent() {
 
 function buildDosboxConf() {
   const s = readSettings();
-  const sb = s.sound === "on" ? "true" : "false";
   return `
 [sdl]
 fullscreen=false
@@ -460,8 +447,11 @@ function dbTransaction(mode, fn) {
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, mode);
       const store = tx.objectStore(STORE_NAME);
-      fn(store, resolve, reject);
-      tx.onerror = () => reject(tx.error);
+      fn(store,
+        (val) => { db.close(); resolve(val); },
+        (err) => { db.close(); reject(err); }
+      );
+      tx.onerror = () => { db.close(); reject(tx.error); };
     });
   });
 }
@@ -501,7 +491,7 @@ function captureScreenshot() {
     thumb.height = Math.round(canvas.height * scale);
     const ctx = thumb.getContext("2d");
     ctx.drawImage(canvas, 0, 0, thumb.width, thumb.height);
-    return thumb.toDataURL("image/png", 0.7);
+    return thumb.toDataURL("image/jpeg", 0.7);
   } catch { return null; }
 }
 
@@ -555,19 +545,32 @@ async function loadGameState(id) {
     if (!save) return;
 
     showLoading("Restoring...");
-    const stateBytes = new Uint8Array(save.state);
-    const blob = new Blob([stateBytes], { type: "application/octet-stream" });
-    const blobUrl = URL.createObjectURL(blob);
 
-    const success = await startDos(blobUrl);
-    if (success) {
-      state.objectUrl = blobUrl;
-      state.currentBundle = save.bundleUrl;
-      setStatus(`Restored "${save.name}"`, "ok");
-    } else {
-      URL.revokeObjectURL(blobUrl);
+    // First, boot the original game bundle
+    const success = await startDos(save.bundleUrl);
+    if (!success) {
+      setStatus("Restore failed: could not start game.", "error");
+      return;
     }
-  } catch (err) { setStatus("Restore failed.", "error"); }
+
+    // Then restore emulator state into the running instance
+    if (state.ci && typeof state.ci.restore === "function") {
+      const stateBytes = new Uint8Array(save.state);
+      try {
+        await state.ci.restore(stateBytes);
+        state.currentBundle = save.bundleUrl;
+        setStatus(`Restored "${escapeHtml(save.name)}"`, "ok");
+      } catch (restoreErr) {
+        logError("State restore failed:", restoreErr);
+        setStatus("Game loaded but save restore failed.", "error");
+      }
+    } else {
+      setStatus("Game loaded (restore not supported by emulator).", "error");
+    }
+  } catch (err) {
+    logError("loadGameState error:", err);
+    setStatus("Restore failed.", "error");
+  }
 }
 
 async function renderSavesList() {
@@ -582,17 +585,42 @@ async function renderSavesList() {
     saves.forEach(save => {
       const el = document.createElement("div");
       el.className = "save-card";
-      el.innerHTML = `
-        ${save.screenshot ? `<img src="${save.screenshot}" class="save-thumb" />` : ""}
-        <div class="save-info">
-          <span class="save-name">${save.name}</span>
-          <span class="save-date">${new Date(save.timestamp).toLocaleString()}</span>
-        </div>
-        <div class="save-actions">
-          <button class="action-btn" onclick="app.loadSave('${save.id}')">Load</button>
-          <button class="ghost-btn" onclick="app.deleteSave('${save.id}')">Del</button>
-        </div>
-      `;
+
+      if (save.screenshot) {
+        const img = document.createElement("img");
+        img.src = save.screenshot;
+        img.className = "save-thumb";
+        el.appendChild(img);
+      }
+
+      const info = document.createElement("div");
+      info.className = "save-info";
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "save-name";
+      nameSpan.textContent = save.name;
+      const dateSpan = document.createElement("span");
+      dateSpan.className = "save-date";
+      dateSpan.textContent = new Date(save.timestamp).toLocaleString();
+      info.appendChild(nameSpan);
+      info.appendChild(dateSpan);
+      el.appendChild(info);
+
+      const actions = document.createElement("div");
+      actions.className = "save-actions";
+      const loadBtn = document.createElement("button");
+      loadBtn.className = "action-btn";
+      loadBtn.textContent = "Load";
+      loadBtn.addEventListener("click", () => loadGameState(save.id));
+      const delBtn = document.createElement("button");
+      delBtn.className = "ghost-btn";
+      delBtn.textContent = "Del";
+      delBtn.addEventListener("click", () => {
+        if (confirm("Delete this save?")) deleteSave(save.id).then(renderSavesList);
+      });
+      actions.appendChild(loadBtn);
+      actions.appendChild(delBtn);
+      el.appendChild(actions);
+
       dom.savesList.appendChild(el);
     });
   } catch { }
@@ -602,33 +630,39 @@ async function renderSavesList() {
 
 function setupEventListeners() {
   // Dropzone
-  dom.dropzone.addEventListener("dragover", e => { e.preventDefault(); dom.dropzone.classList.add("dragging"); });
-  dom.dropzone.addEventListener("dragleave", () => dom.dropzone.classList.remove("dragging"));
-  dom.dropzone.addEventListener("drop", async e => {
-    e.preventDefault();
-    dom.dropzone.classList.remove("dragging");
-    loadUserBundle(e.dataTransfer.files[0]);
-  });
+  if (dom.dropzone) {
+    dom.dropzone.addEventListener("dragover", e => { e.preventDefault(); dom.dropzone.classList.add("dragging"); });
+    dom.dropzone.addEventListener("dragleave", () => dom.dropzone.classList.remove("dragging"));
+    dom.dropzone.addEventListener("drop", e => {
+      e.preventDefault();
+      dom.dropzone.classList.remove("dragging");
+      loadUserBundle(e.dataTransfer.files[0]);
+    });
+  }
 
-  dom.bundleInput.addEventListener("change", e => {
-    loadUserBundle(e.target.files[0]);
-    e.target.value = "";
-  });
+  if (dom.bundleInput) {
+    dom.bundleInput.addEventListener("change", e => {
+      loadUserBundle(e.target.files[0]);
+      e.target.value = "";
+    });
+  }
 
   // URL loader
-  dom.loadUrlBtn.addEventListener("click", () => loadBundleFromUrl(dom.bundleUrlInput.value));
-  dom.bundleUrlInput.addEventListener("keydown", e => { if (e.key === "Enter") loadBundleFromUrl(dom.bundleUrlInput.value); });
+  if (dom.loadUrlBtn) dom.loadUrlBtn.addEventListener("click", () => loadBundleFromUrl(dom.bundleUrlInput?.value));
+  if (dom.bundleUrlInput) dom.bundleUrlInput.addEventListener("keydown", e => { if (e.key === "Enter") loadBundleFromUrl(dom.bundleUrlInput.value); });
 
   // Search
   dom.gameSearchInput?.addEventListener("input", e => renderGameGrid(e.target.value));
 
   // Controls
-  dom.stopBtn.addEventListener("click", () => stopCurrent().then(() => setStatus("Stopped")));
-  dom.saveBtn.addEventListener("click", () => saveGameState());
-  dom.fullscreenBtn.addEventListener("click", () => {
-    if (!document.fullscreenElement) dom.playerShell.requestFullscreen();
-    else document.exitFullscreen();
-  });
+  if (dom.stopBtn) dom.stopBtn.addEventListener("click", () => stopCurrent().then(() => setStatus("Stopped")));
+  if (dom.saveBtn) dom.saveBtn.addEventListener("click", () => saveGameState());
+  if (dom.fullscreenBtn) {
+    dom.fullscreenBtn.addEventListener("click", () => {
+      if (!document.fullscreenElement) dom.playerShell?.requestFullscreen();
+      else document.exitFullscreen();
+    });
+  }
 
   // Settings
   Object.values(settingsFields).forEach(f => {
@@ -642,32 +676,35 @@ function renderGameGrid(filter = "") {
   const query = filter.toLowerCase().trim();
   const filtered = GAMES.filter(g => g.name.toLowerCase().includes(query));
 
+  const FALLBACK_ICON = "data:image/svg+xml," + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#111"/><text y="50%" x="50%" dominant-baseline="middle" text-anchor="middle" font-size="50" fill="#333">?</text></svg>'
+  );
+
   filtered.forEach(game => {
     const card = document.createElement("div");
     card.className = "game-card";
-    card.innerHTML = `
-      <div class="game-icon-container">
-        <img src="${game.icon}" class="game-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%23111\\'/><text y=\\'50%\\' x=\\'50%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' font-size=\\'50\\' fill=\\'%23333\\'>?</text></svg>'">
-      </div>
-      <span class="game-label">${game.name}</span>
-    `;
-    card.onclick = () => {
+
+    const iconWrap = document.createElement("div");
+    iconWrap.className = "game-icon-container";
+    const img = document.createElement("img");
+    img.src = game.icon;
+    img.className = "game-thumb";
+    img.addEventListener("error", () => { img.src = FALLBACK_ICON; }, { once: true });
+    iconWrap.appendChild(img);
+    card.appendChild(iconWrap);
+
+    const label = document.createElement("span");
+    label.className = "game-label";
+    label.textContent = game.name;
+    card.appendChild(label);
+
+    card.addEventListener("click", () => {
       setStatus(`Loading ${game.name}...`, "");
       startDos(game.url);
-    };
+    });
     dom.gameGrid.appendChild(card);
   });
 }
-
-// ── Global Exports (for inline onclicks) ──────────────────────────
-window.app = {
-  loadSave: (id) => loadGameState(id),
-  deleteSave: (id) => {
-    if (confirm("Delete this save?")) {
-      deleteSave(id).then(renderSavesList);
-    }
-  }
-};
 
 // ── Global Error Suppression ─────────────────────────────────────
 window.addEventListener('unhandledrejection', (event) => {
