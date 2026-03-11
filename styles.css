@@ -469,7 +469,7 @@ body {
 .section-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 0.5rem;
   gap: 0.75rem;
 }
@@ -502,6 +502,19 @@ body {
   margin-top: 0.25rem;
   flex: 1;
 }
+
+.featured-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  padding-right: 0;
+  min-height: auto;
+  flex: unset;
+}
+
+.featured-grid .game-card {
+  min-width: 0;
+}
+
 
 /* Custom scrollbar for game grid */
 .game-grid::-webkit-scrollbar {
@@ -1008,6 +1021,44 @@ select:focus {
   box-shadow: none;
 }
 
+
+.library-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.84);
+  z-index: 150;
+  padding: 1.25rem;
+}
+
+.library-modal[hidden] {
+  display: none;
+}
+
+.library-modal__panel {
+  height: 100%;
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.library-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.library-grid {
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+}
+
+body.library-open {
+  overflow: hidden;
+}
+
 /* ── Responsive ────────────────────────────────────────────────── */
 @media (max-width: 860px) {
   .layout {
@@ -1028,6 +1079,14 @@ select:focus {
     border-top: 1px solid var(--panel-border);
     max-height: 45vh;
     overflow-y: auto;
+  }
+
+  .featured-grid {
+    grid-template-columns: repeat(3, minmax(80px, 1fr));
+  }
+
+  .library-modal {
+    padding: 0.5rem;
   }
 
   .brand-wrap {
@@ -1067,5 +1126,9 @@ select:focus {
 
   .settings-grid {
     grid-template-columns: 1fr;
+  }
+
+  .featured-grid {
+    grid-template-columns: repeat(2, minmax(80px, 1fr));
   }
 }

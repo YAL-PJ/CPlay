@@ -15,6 +15,10 @@ const dom = {
   emptyState: document.getElementById("emptyState"),
   savesList: document.getElementById("savesList"),
   gameGrid: document.getElementById("gameGrid"),
+  featuredGameGrid: document.getElementById("featuredGameGrid"),
+  openLibraryBtn: document.getElementById("openLibraryBtn"),
+  closeLibraryBtn: document.getElementById("closeLibraryBtn"),
+  libraryModal: document.getElementById("libraryModal"),
   gameSearchInput: document.getElementById("gameSearch"),
   gameQuickFilters: document.getElementById("gameQuickFilters"),
   gameSort: document.getElementById("gameSort"),
@@ -62,7 +66,7 @@ const QUICK_FILTERS = [
 
 const FALLBACK_ICON = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#111"/><text y="50%" x="50%" dominant-baseline="middle" text-anchor="middle" font-size="50" fill="#333">?</text></svg>');
 const defaultSettings = { cycles: 12000, memsize: 16, sound: "on", themeTint: "amber" };
-const state = { ci: null, isRunning: false, startingLock: false, objectUrl: null, currentBundle: "", activeFilter: "all", sortBy: "name" };
+const state = { ci: null, isRunning: false, startingLock: false, objectUrl: null, currentBundle: "", activeFilter: "all", sortBy: "name", libraryOpen: false };
 let allGames = [...BASE_GAMES];
 
 const getPlayableLink = game => game.links.find(link => link.type === "jsdos" || link.type === "zip") || game.links[0];
@@ -295,49 +299,65 @@ function getFilteredGames(filterText = "") {
   return games;
 }
 
+function setLibraryOpen(open) {
+  state.libraryOpen = open;
+  if (!dom.libraryModal) return;
+  dom.libraryModal.hidden = !open;
+  document.body.classList.toggle("library-open", open);
+  if (open) dom.gameSearchInput?.focus();
+}
+
+function createGameCard(game) {
+  const card = document.createElement("article"); card.className = "game-card";
+
+  const iconWrap = document.createElement("div"); iconWrap.className = "game-icon-container";
+  const img = document.createElement("img"); img.src = game.icon || FALLBACK_ICON; img.className = "game-thumb"; img.alt = game.name + " cover";
+  img.addEventListener("error", () => { img.src = FALLBACK_ICON; }, { once: true });
+  iconWrap.appendChild(img); card.appendChild(iconWrap);
+
+  const label = document.createElement("span"); label.className = "game-label"; label.textContent = game.name; card.appendChild(label);
+  const source = document.createElement("span"); source.className = "game-source"; source.textContent = `${game.source} • ${game.year}`; card.appendChild(source);
+  const badge = document.createElement("span"); badge.className = "game-badge " + (game.instantPlay ? "badge-instant" : "badge-manual"); badge.textContent = game.instantPlay ? "1-Click" : "Manual"; card.appendChild(badge);
+
+  const linksRow = document.createElement("div"); linksRow.className = "game-links";
+  game.links.forEach(link => {
+    const linkEl = document.createElement("a"); linkEl.href = link.url; linkEl.target = "_blank"; linkEl.rel = "noopener noreferrer"; linkEl.textContent = link.label; linkEl.className = "mini-link"; linkEl.addEventListener("click", e => e.stopPropagation()); linksRow.appendChild(linkEl);
+  });
+  card.appendChild(linksRow);
+
+  const playableLink = getPlayableLink(game);
+  if (playableLink?.type === "jsdos" || playableLink?.type === "zip") {
+    const btnRow = document.createElement("div"); btnRow.className = "game-btn-row";
+
+    const playBtn = document.createElement("button"); playBtn.type = "button"; playBtn.className = "play-btn"; playBtn.textContent = "Play";
+    playBtn.addEventListener("click", e => {
+      e.stopPropagation(); setStatus(`Loading ${game.name}...`, "");
+      startDos(playableLink.url).then(result => { if (!result.ok && /failed to fetch/i.test(result.errorMessage || "")) { setStatus(hintForFetchFailure(playableLink.url), "error"); window.open(playableLink.url, "_blank", "noopener,noreferrer"); } });
+    });
+    btnRow.appendChild(playBtn);
+
+    const dlBtn = document.createElement("a"); dlBtn.href = playableLink.url; dlBtn.className = "dl-btn"; dlBtn.textContent = "\u2B07"; dlBtn.title = "Download .jsdos bundle";
+    dlBtn.setAttribute("download", ""); dlBtn.addEventListener("click", e => e.stopPropagation());
+    btnRow.appendChild(dlBtn);
+
+    card.appendChild(btnRow);
+  }
+
+  card.addEventListener("click", () => window.open(game.links[0].url, "_blank", "noopener,noreferrer"));
+  return card;
+}
+
+function renderFeaturedGames() {
+  if (!dom.featuredGameGrid) return;
+  dom.featuredGameGrid.innerHTML = "";
+  allGames.filter(g => g.instantPlay).slice(0, 3).forEach(game => dom.featuredGameGrid.appendChild(createGameCard(game)));
+}
+
 function renderGameGrid(filter = "") {
   if (!dom.gameGrid) return;
   const filtered = getFilteredGames(filter);
   dom.gameGrid.innerHTML = "";
-  filtered.forEach(game => {
-    const card = document.createElement("article"); card.className = "game-card";
-
-    const iconWrap = document.createElement("div"); iconWrap.className = "game-icon-container";
-    const img = document.createElement("img"); img.src = game.icon || FALLBACK_ICON; img.className = "game-thumb"; img.alt = game.name + " cover";
-    img.addEventListener("error", () => { img.src = FALLBACK_ICON; }, { once: true });
-    iconWrap.appendChild(img); card.appendChild(iconWrap);
-
-    const label = document.createElement("span"); label.className = "game-label"; label.textContent = game.name; card.appendChild(label);
-    const source = document.createElement("span"); source.className = "game-source"; source.textContent = `${game.source} \u2022 ${game.year}`; card.appendChild(source);
-    const badge = document.createElement("span"); badge.className = "game-badge " + (game.instantPlay ? "badge-instant" : "badge-manual"); badge.textContent = game.instantPlay ? "1-Click" : "Manual"; card.appendChild(badge);
-
-    const linksRow = document.createElement("div"); linksRow.className = "game-links";
-    game.links.forEach(link => {
-      const linkEl = document.createElement("a"); linkEl.href = link.url; linkEl.target = "_blank"; linkEl.rel = "noopener noreferrer"; linkEl.textContent = link.label; linkEl.className = "mini-link"; linkEl.addEventListener("click", e => e.stopPropagation()); linksRow.appendChild(linkEl);
-    });
-    card.appendChild(linksRow);
-
-    const playableLink = getPlayableLink(game);
-    if (playableLink?.type === "jsdos" || playableLink?.type === "zip") {
-      const btnRow = document.createElement("div"); btnRow.className = "game-btn-row";
-
-      const playBtn = document.createElement("button"); playBtn.type = "button"; playBtn.className = "play-btn"; playBtn.textContent = "Play";
-      playBtn.addEventListener("click", e => {
-        e.stopPropagation(); setStatus(`Loading ${game.name}...`, "");
-        startDos(playableLink.url).then(result => { if (!result.ok && /failed to fetch/i.test(result.errorMessage || "")) { setStatus(hintForFetchFailure(playableLink.url), "error"); window.open(playableLink.url, "_blank", "noopener,noreferrer"); } });
-      });
-      btnRow.appendChild(playBtn);
-
-      const dlBtn = document.createElement("a"); dlBtn.href = playableLink.url; dlBtn.className = "dl-btn"; dlBtn.textContent = "\u2B07"; dlBtn.title = "Download .jsdos bundle";
-      dlBtn.setAttribute("download", ""); dlBtn.addEventListener("click", e => e.stopPropagation());
-      btnRow.appendChild(dlBtn);
-
-      card.appendChild(btnRow);
-    }
-
-    card.addEventListener("click", () => window.open(game.links[0].url, "_blank", "noopener,noreferrer"));
-    dom.gameGrid.appendChild(card);
-  });
+  filtered.forEach(game => dom.gameGrid.appendChild(createGameCard(game)));
 
   if (dom.visibleGamesCount) dom.visibleGamesCount.textContent = String(filtered.length);
   if (dom.instantGamesCount) dom.instantGamesCount.textContent = String(filtered.filter(g => g.instantPlay).length);
@@ -363,6 +383,10 @@ function setupEventListeners() {
   dom.gameSearchInput?.addEventListener("input", e => renderGameGrid(e.target.value));
   dom.gameSort?.addEventListener("change", e => { state.sortBy = e.target.value; renderGameGrid(dom.gameSearchInput?.value || ""); });
   dom.randomPlayBtn?.addEventListener("click", playRandomGame);
+  dom.openLibraryBtn?.addEventListener("click", () => setLibraryOpen(true));
+  dom.closeLibraryBtn?.addEventListener("click", () => setLibraryOpen(false));
+  dom.libraryModal?.addEventListener("click", e => { if (e.target === dom.libraryModal) setLibraryOpen(false); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && state.libraryOpen) setLibraryOpen(false); });
   dom.stopBtn?.addEventListener("click", () => stopCurrent().then(() => setStatus("Stopped")));
   dom.saveBtn?.addEventListener("click", saveGameState);
   dom.fullscreenBtn?.addEventListener("click", () => !document.fullscreenElement ? dom.playerShell?.requestFullscreen() : document.exitFullscreen());
@@ -374,7 +398,7 @@ window.addEventListener("unhandledrejection", event => { if (handleExitStatus(ev
 document.addEventListener("DOMContentLoaded", async () => {
   hydrateSettingsUI(); setupEventListeners();
   await loadExternalLibrary();
-  renderGameGrid(); renderSavesList();
+  renderGameGrid(); renderFeaturedGames(); renderSavesList();
   const loadedCount = Math.max(0, allGames.length - BASE_GAMES.length);
   setStatus(`Ready — ${loadedCount ? `${loadedCount} auto library games loaded` : "curated 1-click library loaded"}`, "ok"); updateUI();
 });
