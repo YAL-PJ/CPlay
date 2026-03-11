@@ -536,6 +536,50 @@ body {
   color: var(--accent);
 }
 
+.game-source {
+  font-size: 0.58rem;
+  color: var(--muted);
+  opacity: 0.75;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.game-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.mini-link {
+  font-size: 0.56rem;
+  color: var(--muted);
+  border: 1px solid var(--panel-border);
+  padding: 0.1rem 0.25rem;
+  text-decoration: none;
+  border-radius: 2px;
+}
+
+.mini-link:hover {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+}
+
+.play-btn {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--bg);
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  padding: 0.15rem 0.4rem;
+  cursor: pointer;
+}
+
+.play-btn:hover {
+  filter: brightness(1.08);
+}
+
 /* ── Forms ─────────────────────────────────────────────────────── */
 input,
 select {

@@ -7,7 +7,7 @@ A static, no-backend DOS web player built with [js-dos](https://js-dos.com/).
 - Run DOS games in-browser with no local emulator install.
 - Bring-your-own bundle support (`.jsdos` / `.zip`).
 - Paste-and-load support for direct URLs and GitHub links (blob/raw/repo), with cloud share-link normalization for Google Drive/Dropbox/OneDrive.
-- Demo launch buttons for shareware test bundles.
+- Curated game library with source labels, per-game links, and one-click play when a direct `.jsdos`/`.zip` link is available.
 - Saved settings (CPU cycles, memory, sound, and theme tint) via `localStorage`.
 - Retro-inspired UI with modern layout and fullscreen mode.
 
