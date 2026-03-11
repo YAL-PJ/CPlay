@@ -447,6 +447,32 @@ body {
   gap: 0.35rem;
 }
 
+.trusted-sites {
+  border: 1px solid var(--panel-border);
+  padding: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.trusted-sites__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.trusted-sites__links a {
+  font-size: 0.62rem;
+  color: var(--muted);
+  border: 1px solid var(--panel-border);
+  text-decoration: none;
+  padding: 0.15rem 0.35rem;
+}
+
+.trusted-sites__links a:hover {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+}
+
 .library-sort {
   font-size: 0.64rem;
   color: var(--muted);
@@ -495,7 +521,7 @@ body {
 
 .game-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
   gap: 0.5rem;
   overflow-y: auto;
   padding-right: 0.5rem;
@@ -538,13 +564,16 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: space-between;
+  gap: 0.25rem;
   cursor: pointer;
   background: transparent;
-  padding: 0.5rem;
-  border: 1px solid transparent;
+  padding: 0.35rem;
+  border: 1px solid var(--panel-border);
+  aspect-ratio: 1 / 1;
   transition: all var(--transition);
   text-align: center;
+  overflow: hidden;
 }
 
 .game-card:hover {
@@ -587,7 +616,7 @@ body {
   font-size: 0.68rem;
   color: var(--muted);
   font-weight: 500;
-  line-height: 1;
+  line-height: 1.1;
   word-break: break-word;
   max-width: 100%;
 }
