@@ -44,15 +44,94 @@ const settingsFields = {
 
 // ── Constants ─────────────────────────────────────────────────────
 const GAMES = [
-  { id: "doom", name: "DOOM", url: "https://v8.js-dos.com/bundles/doom.jsdos", icon: "./assets/doom.png" },
-  { id: "digger", name: "Digger", url: "https://v8.js-dos.com/bundles/digger.jsdos", icon: "./assets/digger.png" },
-  { id: "mortal", name: "Mortal Kombat", url: "https://cdn.dos.zone/original/2X/8/872f3668c36085d0b1ace46872145285364ee628.jsdos", icon: "https://cdn.dos.zone/original/2X/c/cf8a8d1660aa253f0ed53bd6c962c894125aaa19.png" },
-  { id: "simcity", name: "Sim City", url: "https://cdn.dos.zone/original/2X/7/744842062905f72648a4d492ccc2526d039b3702.jsdos", icon: "https://cdn.dos.zone/original/2X/3/3b0a82062905f72648a4d492ccc2526d039b3702.png" },
-  { id: "nfs", name: "Need For Speed", url: "https://cdn.dos.zone/custom/dos/nfs.jsdos", icon: "https://cdn.dos.zone/original/2X/e/e35f8e07173e13028290f653456073c681816f1d0.png" },
-  { id: "tyrian", name: "Tyrian 2000", url: "https://cdn.dos.zone/custom/dos/tyrian-2000.jsdos", icon: "https://cdn.dos.zone/original/2X/8/873f982855118f62f1cc056f707f1412354a32d7.png" },
-  { id: "lostvikings", name: "The Lost Vikings", url: "https://cdn.dos.zone/original/2X/1/1b063b2520052ebb504184667ac95e72423331de.jsdos", icon: "https://cdn.dos.zone/original/2X/b/b5a5b1b063b2520052ebb504184667ac95e724233.png" },
-  { id: "anotherworld", name: "Out of This World", url: "https://cdn.dos.zone/original/2X/1/1031eb810e8b648fc5f777b3bd9cbc0187927fd4.jsdos", icon: "https://cdn.dos.zone/original/2X/1/1031eb810e8b648fc5f777b3bd9cbc0187927fd4.png" },
+  {
+    id: "doom-shareware",
+    name: "DOOM (Shareware)",
+    icon: "./assets/doom.png",
+    source: "js-dos",
+    links: [
+      { type: "jsdos", label: "Play", url: "https://v8.js-dos.com/bundles/doom.jsdos" },
+      { type: "site", label: "Listing", url: "https://js-dos.com/games/doom.exe.html" },
+    ],
+  },
+  {
+    id: "digger",
+    name: "Digger",
+    icon: "./assets/digger.png",
+    source: "js-dos",
+    links: [
+      { type: "jsdos", label: "Play", url: "https://v8.js-dos.com/bundles/digger.jsdos" },
+      { type: "site", label: "Listing", url: "https://js-dos.com/games/digger.exe.html" },
+    ],
+  },
+  {
+    id: "pinball",
+    name: "Pinball Fantasies",
+    icon: "./assets/pinball.png",
+    source: "classicdosgames",
+    links: [
+      { type: "site", label: "ClassicDOS", url: "https://www.classicdosgames.com/game/Pinball_Fantasies.html" },
+    ],
+  },
+  {
+    id: "tyrian-2000",
+    name: "Tyrian 2000",
+    icon: "https://cdn.dos.zone/original/2X/8/873f982855118f62f1cc056f707f1412354a32d7.png",
+    source: "dos-zone",
+    links: [
+      { type: "jsdos", label: "Play", url: "https://cdn.dos.zone/custom/dos/tyrian-2000.jsdos" },
+      { type: "site", label: "DOS.Zone", url: "https://dos.zone/tyrian-2000/" },
+    ],
+  },
+  {
+    id: "sim-city",
+    name: "SimCity",
+    icon: "https://cdn.dos.zone/original/2X/3/3b0a82062905f72648a4d492ccc2526d039b3702.png",
+    source: "dos-zone",
+    links: [
+      { type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/7/744842062905f72648a4d492ccc2526d039b3702.jsdos" },
+      { type: "site", label: "DOS.Zone", url: "https://dos.zone/simcity/" },
+    ],
+  },
+  {
+    id: "lost-vikings",
+    name: "The Lost Vikings",
+    icon: "https://cdn.dos.zone/original/2X/b/b5a5b1b063b2520052ebb504184667ac95e724233.png",
+    source: "dos-zone",
+    links: [
+      { type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/1/1b063b2520052ebb504184667ac95e72423331de.jsdos" },
+      { type: "site", label: "DOS.Zone", url: "https://dos.zone/the-lost-vikings/" },
+    ],
+  },
+  {
+    id: "out-of-this-world",
+    name: "Out of This World",
+    icon: "https://cdn.dos.zone/original/2X/1/1031eb810e8b648fc5f777b3bd9cbc0187927fd4.png",
+    source: "dos-zone",
+    links: [
+      { type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/1/1031eb810e8b648fc5f777b3bd9cbc0187927fd4.jsdos" },
+      { type: "site", label: "DOS.Zone", url: "https://dos.zone/out-of-this-world/" },
+    ],
+  },
+  {
+    id: "nfs-se",
+    name: "Need for Speed: SE",
+    icon: "https://cdn.dos.zone/original/2X/e/e35f8e07173e13028290f653456073c681816f1d0.png",
+    source: "dos-zone",
+    links: [
+      { type: "jsdos", label: "Play", url: "https://cdn.dos.zone/custom/dos/nfs.jsdos" },
+      { type: "site", label: "DOS.Zone", url: "https://dos.zone/need-for-speed-se/" },
+    ],
+  },
 ];
+
+const FALLBACK_ICON = "data:image/svg+xml," + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#111"/><text y="50%" x="50%" dominant-baseline="middle" text-anchor="middle" font-size="50" fill="#333">?</text></svg>'
+);
+
+function getPlayableLink(game) {
+  return game.links.find(link => link.type === "jsdos" || link.type === "zip") || game.links[0];
+}
 
 const defaultSettings = {
   cycles: 12000,
@@ -674,11 +753,11 @@ function renderGameGrid(filter = "") {
   if (!dom.gameGrid) return;
   dom.gameGrid.innerHTML = "";
   const query = filter.toLowerCase().trim();
-  const filtered = GAMES.filter(g => g.name.toLowerCase().includes(query));
-
-  const FALLBACK_ICON = "data:image/svg+xml," + encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#111"/><text y="50%" x="50%" dominant-baseline="middle" text-anchor="middle" font-size="50" fill="#333">?</text></svg>'
-  );
+  const filtered = GAMES.filter(g => {
+    if (g.name.toLowerCase().includes(query)) return true;
+    if ((g.source || "").toLowerCase().includes(query)) return true;
+    return g.links.some(link => link.label.toLowerCase().includes(query) || link.type.toLowerCase().includes(query));
+  });
 
   filtered.forEach(game => {
     const card = document.createElement("div");
@@ -698,10 +777,40 @@ function renderGameGrid(filter = "") {
     label.textContent = game.name;
     card.appendChild(label);
 
-    card.addEventListener("click", () => {
-      setStatus(`Loading ${game.name}...`, "");
-      startDos(game.url);
+    const source = document.createElement("span");
+    source.className = "game-source";
+    source.textContent = game.source;
+    card.appendChild(source);
+
+    const linksRow = document.createElement("div");
+    linksRow.className = "game-links";
+    game.links.forEach(link => {
+      const linkEl = document.createElement("a");
+      linkEl.href = link.url;
+      linkEl.target = "_blank";
+      linkEl.rel = "noopener noreferrer";
+      linkEl.textContent = link.label;
+      linkEl.className = "mini-link";
+      linkEl.addEventListener("click", e => e.stopPropagation());
+      linksRow.appendChild(linkEl);
     });
+    card.appendChild(linksRow);
+
+    const playableLink = getPlayableLink(game);
+    if (playableLink?.type === "jsdos" || playableLink?.type === "zip") {
+      const playBtn = document.createElement("button");
+      playBtn.type = "button";
+      playBtn.className = "play-btn";
+      playBtn.textContent = "Play";
+      playBtn.addEventListener("click", e => {
+        e.stopPropagation();
+        setStatus(`Loading ${game.name}...`, "");
+        startDos(playableLink.url);
+      });
+      card.appendChild(playBtn);
+    }
+
+    card.addEventListener("click", () => window.open(game.links[0].url, "_blank", "noopener,noreferrer"));
     dom.gameGrid.appendChild(card);
   });
 }
