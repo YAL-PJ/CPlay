@@ -1,0 +1,28 @@
+[
+  {
+    "id": "alex-the-allegator-2",
+    "title": "Alex the Allegator 2",
+    "year": 2001,
+    "genre": "Puzzle",
+    "category": "puzzle",
+    "license": "Freeware",
+    "source": "dosgamesarchive",
+    "sourceUrl": "https://www.dosgamesarchive.com/game/alex-the-allegator-2/",
+    "sourceDownloadUrl": "",
+    "metadataOnly": true,
+    "tags": ["freeware", "dos", "starter"]
+  },
+  {
+    "id": "agi-tetris",
+    "title": "AGI Tetris",
+    "year": 2004,
+    "genre": "Puzzle",
+    "category": "puzzle",
+    "license": "Freeware",
+    "source": "dosgamesarchive",
+    "sourceUrl": "https://www.dosgamesarchive.com/game/agi-tetris/",
+    "sourceDownloadUrl": "",
+    "metadataOnly": true,
+    "tags": ["freeware", "dos", "starter"]
+  }
+]

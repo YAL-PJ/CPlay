@@ -49,3 +49,36 @@ Tips for safe inclusion:
 - User-provided bundles are never uploaded.
 - Some remote links may fail because of CORS, virus-scan interstitials, auth gates, or unexpected archive structure.
 - Legal distribution of games is your responsibility; the demos should only point to content you are allowed to redistribute.
+
+## Fully automated legal library pipeline
+
+This repo now includes a bot that can scrape legal freeware/shareware metadata, build `.jsdos` bundles, publish them to your bundle repo, and regenerate `library.json`.
+
+### Files added
+
+- `tools/library-bot/` — scraper + bundler + library generator.
+- `.github/workflows/library-bot.yml` — scheduled/dispatch automation.
+- `library.json` — runtime game catalog loaded by `app.js`.
+
+### One-time GitHub setup
+
+1. Keep this repo public (C:\PLAY app).
+2. Keep `YAL-PJ/dos-freeware-games-library` public (bundle storage repo).
+3. Add a secret in this repo: `DOS_LIBRARY_TOKEN` (fine-grained PAT with `contents:write` on `dos-freeware-games-library`).
+4. Run **Actions → Library Bot → Run workflow** once.
+
+### Local bot run
+
+```bash
+npm --prefix tools/library-bot install
+npm --prefix tools/library-bot run run
+```
+
+Optional env vars:
+
+- `CPLAY_LIBRARY_REPO_PATH=/path/to/local/clone/of/dos-freeware-games-library`
+- `CPLAY_BUNDLE_BASE_URL=https://raw.githubusercontent.com/YAL-PJ/dos-freeware-games-library/main/bundles`
+
+### Runtime integration
+
+`app.js` now automatically fetches `./library.json` on startup and merges it with built-in curated games.

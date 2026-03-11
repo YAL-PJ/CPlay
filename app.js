@@ -30,7 +30,7 @@ const settingsFields = {
   themeTint: document.getElementById("themeTint"),
 };
 
-const GAMES = [
+const BASE_GAMES = [
   { id: "doom-shareware", name: "DOOM (Shareware)", source: "js-dos", category: "fps", year: 1993, instantPlay: true, icon: "./assets/doom.png", links: [{ type: "jsdos", label: "Play", url: "https://v8.js-dos.com/bundles/doom.jsdos" }, { type: "site", label: "Listing", url: "https://js-dos.com/games/doom.exe.html" }] },
   { id: "doom2", name: "DOOM II", source: "dos-zone", category: "fps", year: 1994, instantPlay: true, icon: "", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/custom/dos/doom2.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/doom-ii/" }] },
   { id: "wolf3d", name: "Wolfenstein 3D", source: "dos-zone", category: "fps", year: 1992, instantPlay: true, icon: "", links: [{ type: "jsdos", label: "Play", url: "https://cdn.dos.zone/original/2X/a/ac888d1660aa253f0ed53bd6c962c894125aaa19.jsdos" }, { type: "site", label: "DOS.Zone", url: "https://dos.zone/wolfenstein-3d/" }] },
@@ -63,6 +63,7 @@ const QUICK_FILTERS = [
 const FALLBACK_ICON = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#111"/><text y="50%" x="50%" dominant-baseline="middle" text-anchor="middle" font-size="50" fill="#333">?</text></svg>');
 const defaultSettings = { cycles: 12000, memsize: 16, sound: "on", themeTint: "amber" };
 const state = { ci: null, isRunning: false, startingLock: false, objectUrl: null, currentBundle: "", activeFilter: "all", sortBy: "name" };
+let allGames = [...BASE_GAMES];
 
 const getPlayableLink = game => game.links.find(link => link.type === "jsdos" || link.type === "zip") || game.links[0];
 const log = (...a) => console.log("[CPLAY]", ...a);
@@ -203,6 +204,51 @@ async function renderSavesList() {
   } catch { }
 }
 
+
+
+function normalizeLibraryEntry(entry) {
+  const name = String(entry.title || entry.name || "").trim();
+  const downloadUrl = String(entry.downloadUrl || "").trim();
+  const sourceUrl = String(entry.sourceUrl || "").trim();
+  if (!name || (!downloadUrl && !sourceUrl)) return null;
+  const links = [];
+  if (downloadUrl) links.push({ type: "jsdos", label: "Play", url: downloadUrl });
+  if (sourceUrl) links.push({ type: "site", label: "Source", url: sourceUrl });
+  const id = String(entry.id || name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""));
+  return {
+    id: id || `game-${Math.random().toString(16).slice(2)}`,
+    name,
+    source: String(entry.source || "community-library"),
+    category: String(entry.category || entry.genre || "other").toLowerCase().replace(/[^a-z0-9]+/g, "-") || "other",
+    year: Number(entry.year) || 0,
+    instantPlay: Boolean(downloadUrl),
+    icon: String(entry.icon || ""),
+    links,
+    license: entry.license || ""
+  };
+}
+
+async function loadExternalLibrary() {
+  try {
+    const response = await fetch("./library.json", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    if (!Array.isArray(data)) throw new Error("library.json is not an array");
+    const imported = data.map(normalizeLibraryEntry).filter(Boolean);
+    if (!imported.length) {
+      allGames = [...BASE_GAMES];
+      return;
+    }
+    const merged = [...BASE_GAMES];
+    const seen = new Set(merged.map(g => g.id));
+    imported.forEach(game => { if (!seen.has(game.id)) { seen.add(game.id); merged.push(game); } });
+    allGames = merged;
+  } catch (error) {
+    logError("Failed to load library.json", error);
+    allGames = [...BASE_GAMES];
+  }
+}
+
 function hintForFetchFailure(urlValue) { return (new URL(urlValue).hostname.includes("dos.zone")) ? "This host blocked browser fetch. Click listing or download then drag into C:\\PLAY." : "Host blocked browser fetch. Open listing or download, then drag the file into C:\\PLAY."; }
 
 function setupFilterUI() {
@@ -221,7 +267,7 @@ function setupFilterUI() {
 function getFilteredGames(filterText = "") {
   const query = filterText.toLowerCase().trim();
   const quickFilter = QUICK_FILTERS.find(f => f.id === state.activeFilter) || QUICK_FILTERS[0];
-  let games = GAMES.filter(g => quickFilter.predicate(g));
+  let games = allGames.filter(g => quickFilter.predicate(g));
   if (query) {
     games = games.filter(g => [g.name, g.source, g.category, String(g.year), ...g.links.map(l => `${l.label} ${l.type}`)].join(" ").toLowerCase().includes(query));
   }
@@ -309,7 +355,10 @@ function setupEventListeners() {
 
 window.addEventListener("unhandledrejection", event => { if (handleExitStatus(event.reason)) event.preventDefault(); });
 
-document.addEventListener("DOMContentLoaded", () => {
-  hydrateSettingsUI(); setupEventListeners(); renderGameGrid(); renderSavesList();
-  setStatus("Ready — curated 1-click library loaded", "ok"); updateUI();
+document.addEventListener("DOMContentLoaded", async () => {
+  hydrateSettingsUI(); setupEventListeners();
+  await loadExternalLibrary();
+  renderGameGrid(); renderSavesList();
+  const loadedCount = Math.max(0, allGames.length - BASE_GAMES.length);
+  setStatus(`Ready — ${loadedCount ? `${loadedCount} auto library games loaded` : "curated 1-click library loaded"}`, "ok"); updateUI();
 });
