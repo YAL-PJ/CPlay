@@ -25,6 +25,7 @@ const dom = {
   randomPlayBtn: document.getElementById("randomPlayBtn"),
   visibleGamesCount: document.getElementById("visibleGamesCount"),
   instantGamesCount: document.getElementById("instantGamesCount"),
+  homeLibraryHint: document.getElementById("homeLibraryHint"),
 };
 
 const settingsFields = {
@@ -299,7 +300,21 @@ function setLibraryOpen(open) {
   if (open) dom.gameSearchInput?.focus();
 }
 
-function createGameCard(game) {
+function launchGame(game, options = {}) {
+  const { closeLibrary = false, openDownloadOnFetchFail = false } = options;
+  const playableLink = getPlayableLink(game);
+  if (!playableLink) return;
+  if (closeLibrary) setLibraryOpen(false);
+  setStatus(`Loading ${game.name}...`, "");
+  startDos(playableLink.url).then(result => {
+    if (!result.ok || !/failed to fetch/i.test(result.errorMessage || "")) return;
+    setStatus(hintForFetchFailure(playableLink.url), "error");
+    if (openDownloadOnFetchFail) window.open(playableLink.url, "_blank", "noopener,noreferrer");
+  });
+}
+
+function createGameCard(game, options = {}) {
+  const { showActions = true } = options;
   const card = document.createElement("article"); card.className = "game-card";
 
   const iconWrap = document.createElement("div"); iconWrap.className = "game-icon-container";
@@ -309,30 +324,25 @@ function createGameCard(game) {
 
   const label = document.createElement("span"); label.className = "game-label"; label.textContent = game.name; card.appendChild(label);
   const source = document.createElement("span"); source.className = "game-source"; source.textContent = `${game.source} • ${game.year}`; card.appendChild(source);
-  const badge = document.createElement("span"); badge.className = "game-badge " + (game.instantPlay ? "badge-instant" : "badge-manual"); badge.textContent = game.instantPlay ? "1-Click" : "Manual"; card.appendChild(badge);
+  const badge = document.createElement("span"); badge.className = "game-badge " + (game.instantPlay ? "badge-instant" : "badge-manual"); badge.textContent = game.instantPlay ? "Ready" : "Manual"; card.appendChild(badge);
 
   const playableLink = getPlayableLink(game);
-  if (playableLink?.type === "jsdos" || playableLink?.type === "zip") {
+  if (showActions && (playableLink?.type === "jsdos" || playableLink?.type === "zip")) {
     const btnRow = document.createElement("div"); btnRow.className = "game-btn-row";
 
     const playBtn = document.createElement("button"); playBtn.type = "button"; playBtn.className = "play-btn"; playBtn.textContent = "Play";
     playBtn.addEventListener("click", e => {
-      e.stopPropagation(); setStatus(`Loading ${game.name}...`, "");
-      startDos(playableLink.url).then(result => { if (!result.ok && /failed to fetch/i.test(result.errorMessage || "")) { setStatus(hintForFetchFailure(playableLink.url), "error"); window.open(playableLink.url, "_blank", "noopener,noreferrer"); } });
+      e.stopPropagation();
+      launchGame(game, { closeLibrary: true, openDownloadOnFetchFail: true });
     });
     btnRow.appendChild(playBtn);
-
-    const dlBtn = document.createElement("a"); dlBtn.href = playableLink.url; dlBtn.className = "dl-btn"; dlBtn.textContent = "\u2B07"; dlBtn.title = "Download .jsdos bundle";
-    dlBtn.setAttribute("download", ""); dlBtn.addEventListener("click", e => e.stopPropagation());
-    btnRow.appendChild(dlBtn);
 
     card.appendChild(btnRow);
   }
 
   card.addEventListener("click", () => {
     if (!playableLink) return;
-    setStatus(`Loading ${game.name}...`, "");
-    startDos(playableLink.url).then(result => { if (!result.ok && /failed to fetch/i.test(result.errorMessage || "")) setStatus(hintForFetchFailure(playableLink.url), "error"); });
+    launchGame(game, { closeLibrary: true, openDownloadOnFetchFail: !showActions });
   });
   return card;
 }
@@ -340,7 +350,7 @@ function createGameCard(game) {
 function renderFeaturedGames() {
   if (!dom.featuredGameGrid) return;
   dom.featuredGameGrid.innerHTML = "";
-  allGames.filter(g => g.instantPlay).slice(0, 3).forEach(game => dom.featuredGameGrid.appendChild(createGameCard(game)));
+  allGames.filter(g => g.instantPlay).slice(0, 3).forEach(game => dom.featuredGameGrid.appendChild(createGameCard(game, { showActions: false })));
 }
 
 function renderGameGrid(filter = "") {
@@ -351,6 +361,8 @@ function renderGameGrid(filter = "") {
 
   if (dom.visibleGamesCount) dom.visibleGamesCount.textContent = String(filtered.length);
   if (dom.instantGamesCount) dom.instantGamesCount.textContent = String(filtered.filter(g => g.instantPlay).length);
+  if (dom.openLibraryBtn) dom.openLibraryBtn.textContent = `Open Full Library (${allGames.length} games)`;
+  if (dom.homeLibraryHint) dom.homeLibraryHint.textContent = `${Math.max(allGames.length - 3, 0)} more games in the full library.`;
   setupFilterUI();
 }
 
@@ -358,9 +370,8 @@ function playRandomGame() {
   const candidates = getFilteredGames(dom.gameSearchInput?.value || "").filter(g => g.instantPlay);
   if (!candidates.length) return setStatus("No instant-play game in current filter.", "error");
   const picked = candidates[Math.floor(Math.random() * candidates.length)];
-  const playableLink = getPlayableLink(picked);
   setStatus(`Launching random game: ${picked.name}`, "ok");
-  startDos(playableLink.url);
+  launchGame(picked, { closeLibrary: true });
 }
 
 function setupEventListeners() {
