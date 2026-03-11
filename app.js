@@ -159,17 +159,32 @@ const deleteSave = id => dbTransaction("readwrite", (store, resolve) => { const 
 
 function captureScreenshot() { try { const canvas = dom.playerHost.querySelector("canvas"); if (!canvas) return null; const thumb = document.createElement("canvas"); const scale = 120 / Math.max(canvas.width, 1); thumb.width = Math.round(canvas.width * scale); thumb.height = Math.round(canvas.height * scale); thumb.getContext("2d").drawImage(canvas, 0, 0, thumb.width, thumb.height); return thumb.toDataURL("image/jpeg", 0.7); } catch { return null; } }
 function toUint8Array(data) { if (!data) return null; if (data instanceof Uint8Array) return data; if (data instanceof ArrayBuffer) return new Uint8Array(data); if (ArrayBuffer.isView(data)) return new Uint8Array(data.buffer, data.byteOffset, data.byteLength); if (Array.isArray(data)) return new Uint8Array(data); if (data && typeof data === "object") return toUint8Array(data.data || data.state || data.buffer); return null; }
-function hasSaveSupport(ci) { return ci && (typeof ci.save === "function" || typeof ci.persist === "function"); }
-async function getEmulatorSaveData(ci) { if (!ci) return null; if (typeof ci.save === "function") { try { const bytes = toUint8Array(await ci.save()); if (bytes?.length) return bytes; } catch (err) { logError("ci.save() failed:", err); } } if (typeof ci.persist === "function") { try { const bytes = toUint8Array(await ci.persist()); if (bytes?.length) return bytes; } catch (err) { logError("ci.persist() failed:", err); } } return null; }
+async function saveEmulatorState(ci) {
+  if (!ci) return { ok: false };
+  if (typeof ci.save === "function") {
+    try {
+      const result = await ci.save();
+      const bytes = toUint8Array(result);
+      if (bytes?.length) return { ok: true, state: bytes };
+      if (result === true) return { ok: true, state: null };
+    } catch (err) { logError("ci.save() failed:", err); }
+  }
+  if (typeof ci.persist === "function") {
+    try {
+      const bytes = toUint8Array(await ci.persist());
+      if (bytes?.length) return { ok: true, state: bytes };
+    } catch (err) { logError("ci.persist() failed:", err); }
+  }
+  return { ok: false };
+}
 
 async function saveGameState() {
   if (!state.ci || !state.isRunning) return setStatus("Nothing running.", "error");
-  if (!hasSaveSupport(state.ci)) return setStatus("Save not supported.", "error");
-  const stateData = await getEmulatorSaveData(state.ci);
-  if (!stateData) return setStatus("Save failed: could not capture state.", "error");
+  const result = await saveEmulatorState(state.ci);
+  if (!result.ok) return setStatus("Save not supported.", "error");
   let name = "Unknown";
   try { const url = new URL(state.currentBundle); name = decodeURIComponent((url.pathname.split("/").pop() || "").replace(/\.(jsdos|zip)$/i, "")) || "Custom Game"; } catch { }
-  await putSave({ id: `save-${Date.now()}`, name, timestamp: Date.now(), bundleUrl: state.currentBundle, screenshot: captureScreenshot(), state: Array.from(stateData) });
+  await putSave({ id: `save-${Date.now()}`, name, timestamp: Date.now(), bundleUrl: state.currentBundle, screenshot: captureScreenshot(), state: result.state ? Array.from(result.state) : null });
   setStatus(`Saved "${name}"`, "ok"); await renderSavesList();
 }
 
@@ -177,8 +192,9 @@ async function loadGameState(id) {
   try {
     const save = (await getAllSaves()).find(s => s.id === id); if (!save) return;
     showLoading("Restoring..."); const result = await startDos(save.bundleUrl); if (!result.ok) return setStatus("Restore failed: could not start game.", "error");
-    if (state.ci && typeof state.ci.restore === "function") { await state.ci.restore(new Uint8Array(save.state)); state.currentBundle = save.bundleUrl; setStatus(`Restored "${save.name}"`, "ok"); }
-    else setStatus("Game loaded (restore not supported by emulator).", "error");
+    state.currentBundle = save.bundleUrl;
+    if (save.state && state.ci && typeof state.ci.restore === "function") { await state.ci.restore(new Uint8Array(save.state)); setStatus(`Restored "${save.name}"`, "ok"); }
+    else { setStatus(`Loaded "${save.name}"`, "ok"); }
   } catch { setStatus("Restore failed.", "error"); }
 }
 
