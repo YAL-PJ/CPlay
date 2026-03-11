@@ -382,7 +382,7 @@ async function startDos(bundleUrl) {
       if (handleExitStatus(err)) {
         log("Initial process clean exit.");
         await stopCurrent();
-        return true;
+        return { ok: true };
       }
 
       logError("Emulator Boot Failure:", err);
@@ -390,12 +390,12 @@ async function startDos(bundleUrl) {
       setStatus(`System Error: ${err.message || "Unknown"}`, "error");
       state.isRunning = false;
       updateUI();
-      return false;
+      return { ok: false, errorMessage: err?.message || "Unknown error" };
     }
 
     hideLoading();
     setStatus("System Ready - Drive A:", "ok");
-    return true;
+    return { ok: true };
   } finally {
     state.startingLock = false;
   }
@@ -415,8 +415,8 @@ async function loadUserBundle(file) {
   showLoading(`Loading ${file.name}\u2026`);
   setStatus(`Loading ${file.name}\u2026`, "");
 
-  const success = await startDos(newUrl);
-  if (success) {
+  const result = await startDos(newUrl);
+  if (result.ok) {
     state.objectUrl = newUrl;
   } else {
     URL.revokeObjectURL(newUrl);
@@ -494,7 +494,12 @@ async function loadBundleFromUrl(rawUrl) {
 
     showLoading("Fetching...");
     setStatus("Loading from URL\u2026", "");
-    await startDos(finalUrl);
+    const result = await startDos(finalUrl);
+    if (!result.ok) {
+      const reason = result.errorMessage || "Unknown error";
+      setStatus(`Load failed: ${reason}`, "error");
+      return;
+    }
     if (note) setStatus(`Running (${note})`, "ok");
   } catch (err) {
     hideLoading();
@@ -668,8 +673,8 @@ async function loadGameState(id) {
     showLoading("Restoring...");
 
     // First, boot the original game bundle
-    const success = await startDos(save.bundleUrl);
-    if (!success) {
+    const result = await startDos(save.bundleUrl);
+    if (!result.ok) {
       setStatus("Restore failed: could not start game.", "error");
       return;
     }
@@ -745,6 +750,22 @@ async function renderSavesList() {
       dom.savesList.appendChild(el);
     });
   } catch { }
+}
+
+function getHost(urlValue) {
+  try {
+    return new URL(urlValue).hostname;
+  } catch {
+    return "";
+  }
+}
+
+function hintForFetchFailure(urlValue) {
+  const host = getHost(urlValue);
+  if (host.includes("dos.zone")) {
+    return "This host blocks in-browser fetch from this app. Use the link to download, then drag the file into C:\\PLAY.";
+  }
+  return "Host blocked browser fetch. Open the link to download, then drag the file into C:\\PLAY.";
 }
 
 // ── Event listeners ───────────────────────────────────────────────
@@ -847,7 +868,12 @@ function renderGameGrid(filter = "") {
       playBtn.addEventListener("click", e => {
         e.stopPropagation();
         setStatus(`Loading ${game.name}...`, "");
-        startDos(playableLink.url);
+        startDos(playableLink.url).then(result => {
+          if (!result.ok && /failed to fetch/i.test(result.errorMessage || "")) {
+            setStatus(hintForFetchFailure(playableLink.url), "error");
+            window.open(playableLink.url, "_blank", "noopener,noreferrer");
+          }
+        });
       });
       card.appendChild(playBtn);
     }
