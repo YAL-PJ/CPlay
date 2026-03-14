@@ -55,14 +55,8 @@
       </div>
 
       <div class="library-section">
-        <div class="section-header">
-          <p class="section-title">Featured on A:\GAMES</p>
-          <button id="openLibraryBtn" class="ghost-btn" type="button">Open Library</button>
-        </div>
-        <p class="small-note">Quick picks only on home screen. Open full library for search and filters.</p>
-        <div id="featuredGameGrid" class="game-grid featured-grid">
-          <!-- Populated by app.js -->
-        </div>
+        <button id="openLibraryBtn" class="action-btn" type="button" style="width:100%">Open Game Library</button>
+        <p class="small-note">Browse the A:\GAMES catalog (coming soon).</p>
       </div>
 
       <div class="saves-section">
@@ -128,49 +122,11 @@
             | [SYSTEM READY]                         |
             \________________________________________/
           </div>
-          <p>Pick a game from the <strong>A:\GAMES</strong> drive or drop a <kbd>.jsdos</kbd> file to begin.</p>
+          <p>Drop a <kbd>.jsdos</kbd> file or paste a URL to begin.</p>
         </div>
       </div>
     </section>
   </main>
-
-  <div id="libraryModal" class="library-modal" hidden>
-    <div class="library-modal__panel" role="dialog" aria-modal="true" aria-labelledby="libraryModalTitle">
-      <div class="library-modal__header">
-        <p id="libraryModalTitle" class="section-title">A:\GAMES Full Library</p>
-        <button id="closeLibraryBtn" class="ghost-btn" type="button">Close</button>
-      </div>
-      <div class="section-header">
-        <div class="search-box">
-          <input id="gameSearch" type="search" placeholder="Search library..." aria-label="Search games" />
-        </div>
-      </div>
-      <div class="library-toolbar">
-        <div id="gameQuickFilters" class="quick-filters" aria-label="Quick game filters"></div>
-        <div class="library-row">
-          <label class="library-sort" for="gameSort">Sort</label>
-          <select id="gameSort">
-            <option value="name">Name</option>
-            <option value="year">Year</option>
-            <option value="source">Source</option>
-          </select>
-          <button id="randomPlayBtn" class="action-btn" type="button">Random Play</button>
-        </div>
-        <p class="small-note">Showing <strong id="visibleGamesCount">0</strong> games • <strong
-            id="instantGamesCount">0</strong> 1-click ready.</p>
-      </div>
-      <div class="trusted-sites" aria-label="Trusted DOS and archive sites">
-        <p class="section-title">Trusted DOS &amp; archive sites</p>
-        <div class="trusted-sites__links">
-          <a href="https://www.dosgamesarchive.com/" target="_blank" rel="noopener noreferrer">DOS Games Archive</a>
-          <a href="https://www.classicdosgames.com/" target="_blank" rel="noopener noreferrer">Classic DOS Games</a>
-          <a href="https://archive.org/details/softwarelibrary_msdos_games" target="_blank" rel="noopener noreferrer">Internet Archive (MS-DOS)</a>
-          <a href="https://www.myabandonware.com/" target="_blank" rel="noopener noreferrer">MyAbandonware</a>
-        </div>
-      </div>
-      <div id="gameGrid" class="game-grid library-grid"></div>
-    </div>
-  </div>
 
   <script src="https://v8.js-dos.com/latest/js-dos.js"></script>
   <script type="module" src="./app.js"></script>
