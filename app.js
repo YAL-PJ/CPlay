@@ -209,7 +209,11 @@ function setupEventListeners() {
   dom.stopBtn?.addEventListener("click", () => stopCurrent().then(() => setStatus("Stopped")));
   dom.saveBtn?.addEventListener("click", saveGameState);
   dom.fullscreenBtn?.addEventListener("click", () => !document.fullscreenElement ? dom.playerShell?.requestFullscreen() : document.exitFullscreen());
-  dom.openLibraryBtn?.addEventListener("click", () => setStatus("Game Library coming soon — separate app.", "ok"));
+  dom.openLibraryBtn?.addEventListener("click", () => {
+    const libraryUrl = new URL("https://yal-pj.github.io/dos-freeware-games-library/webapp/");
+    libraryUrl.searchParams.set("cplay", window.location.href.split("?")[0]);
+    window.open(libraryUrl.toString(), "_blank", "noopener");
+  });
   Object.values(settingsFields).forEach(f => f?.addEventListener("change", () => { persistSettings(); applySoundSetting(); }));
 }
 
@@ -219,4 +223,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   hydrateSettingsUI(); setupEventListeners();
   renderSavesList();
   setStatus("Ready — drop a .jsdos bundle or paste a URL to play", "ok"); updateUI();
+
+  // auto-launch if ?bundle= parameter is provided (from A:\GAMES library)
+  const urlParams = new URLSearchParams(window.location.search);
+  const bundleParam = urlParams.get("bundle");
+  if (bundleParam) {
+    loadBundleFromUrl(bundleParam);
+  }
 });
