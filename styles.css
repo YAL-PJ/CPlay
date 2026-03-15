@@ -267,6 +267,81 @@ body {
   align-items: center;
 }
 
+/* ── Sound Toggle Indicator ───────────────────────────────────── */
+.sound-toggle {
+  padding: 0.35rem 0.5rem;
+  line-height: 0;
+}
+
+.sound-toggle .sound-icon {
+  display: none;
+}
+
+.sound-toggle .sound-on-icon {
+  display: block;
+}
+
+.sound-toggle.muted .sound-on-icon {
+  display: none;
+}
+
+.sound-toggle.muted .sound-off-icon {
+  display: block;
+}
+
+.sound-toggle.muted {
+  color: var(--err);
+  border-color: rgba(255, 107, 107, 0.3);
+}
+
+#playerShell:fullscreen .sound-toggle-fullscreen {
+  display: block;
+}
+
+.sound-toggle-fullscreen {
+  display: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--dos-grey);
+  padding: 0.4rem 0.5rem;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 0;
+  transition: opacity 0.3s ease, color var(--transition), border-color var(--transition);
+  border-radius: 0;
+}
+
+.sound-toggle-fullscreen:hover {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+}
+
+.sound-toggle-fullscreen .sound-icon {
+  display: none;
+}
+
+.sound-toggle-fullscreen .sound-on-icon {
+  display: block;
+}
+
+.sound-toggle-fullscreen.muted .sound-on-icon {
+  display: none;
+}
+
+.sound-toggle-fullscreen.muted .sound-off-icon {
+  display: block;
+}
+
+.sound-toggle-fullscreen.muted {
+  color: var(--err);
+  border-color: rgba(255, 107, 107, 0.3);
+}
+
 /* ── Layout ────────────────────────────────────────────────────── */
 .layout {
   display: grid;
