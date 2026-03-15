@@ -483,7 +483,6 @@ select:focus {
   border-radius: 0;
   position: relative;
   min-height: 0;
-  /* Fixes grid overflow */
 }
 
 .player-topline {
@@ -491,15 +490,15 @@ select:focus {
   justify-content: space-between;
   align-items: center;
   padding: 0.4rem 0.75rem;
-  background: var(--panel);
-  border-bottom: 1px solid var(--panel-border);
+  background: var(--dos-blue);
+  border-bottom: 2px solid var(--accent-dim);
   min-height: 36px;
 }
 
 #statusText {
   margin: 0;
   font-size: 0.78rem;
-  color: var(--ok);
+  color: var(--dos-grey);
   font-family: var(--font-mono);
 }
 
@@ -513,10 +512,25 @@ select:focus {
 
 #playerShell {
   overflow: hidden;
-  background: #000;
+  background: #0a0a0a;
   position: relative;
   display: grid;
   place-items: center;
+  transition: box-shadow 0.2s ease;
+}
+
+#playerShell.player-dragging {
+  box-shadow: inset 0 0 60px rgba(255, 180, 84, 0.15), inset 0 0 120px rgba(255, 180, 84, 0.05);
+}
+
+#playerShell.player-dragging .dos-dropzone-area {
+  border-color: var(--accent);
+  background: rgba(255, 180, 84, 0.08);
+}
+
+#playerShell.player-dragging .dos-drop-icon {
+  color: var(--accent);
+  transform: translateY(3px);
 }
 
 #dos-player {
@@ -532,46 +546,160 @@ select:focus {
   height: 100%;
 }
 
-/* ── Empty state ───────────────────────────────────────────────── */
+/* ── Empty state (DOS boot screen) ─────────────────────────────── */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: 100%;
   height: 100%;
-  color: var(--muted);
-  text-align: center;
-  padding: 2rem;
-  gap: 1rem;
+  padding: 0;
   user-select: none;
+}
+
+.dos-boot-screen {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: #0a0a12;
+  font-family: var(--font-mono);
+}
+
+/* ── DOS Header Bar (Norton Commander style) ───────────────────── */
+.dos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--dos-blue);
+  color: var(--dos-cyan);
+  padding: 0.35rem 1rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #0050a8;
+  flex-shrink: 0;
+}
+
+.dos-header-title {
+  text-shadow: 0 0 10px rgba(0, 168, 168, 0.4);
+}
+
+.dos-header-ver {
+  font-size: 0.68rem;
+  color: var(--dos-grey);
   opacity: 0.7;
 }
 
-.empty-state-art {
-  font-family: 'Courier New', monospace;
-  /* Use a very raw monospaced font */
-  font-size: 0.6rem;
-  line-height: 1.25;
-  color: var(--accent-dim);
-  white-space: pre;
-  filter: drop-shadow(0 0 8px var(--accent-soft));
-  letter-spacing: 1px;
+/* ── DOS Body ──────────────────────────────────────────────────── */
+.dos-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+  min-height: 0;
 }
 
-.empty-state p {
+/* ── Terminal output ───────────────────────────────────────────── */
+.dos-terminal {
+  width: 100%;
+  max-width: 480px;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid #1a1a2e;
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.4), inset 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.dos-line {
   margin: 0;
   font-size: 0.8rem;
-  max-width: 300px;
+  line-height: 1.6;
+  color: var(--dos-grey);
+  font-family: var(--font-mono);
 }
 
-.empty-state kbd {
+.dos-prompt {
+  color: var(--dos-white);
+  font-weight: 600;
+}
+
+.dos-muted {
+  color: #555;
+}
+
+.dos-cursor {
   display: inline-block;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--panel-border);
-  border-radius: 3px;
-  padding: 0.1rem 0.35rem;
+  color: var(--dos-grey);
+  animation: blink-cursor 1s step-end infinite;
+}
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ── Drop zone in player area ──────────────────────────────────── */
+.dos-dropzone-area {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 2rem;
+  border: 1px dashed #333;
+  background: rgba(255, 255, 255, 0.015);
+  transition: border-color 0.2s ease, background 0.2s ease;
+  cursor: default;
+}
+
+.dos-drop-icon {
+  color: #444;
+  transition: color 0.2s ease, transform 0.3s ease;
+}
+
+.dos-drop-main {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--dos-grey);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.dos-drop-main kbd {
+  display: inline-block;
+  background: rgba(0, 0, 168, 0.3);
+  border: 1px solid #333;
+  padding: 0.1rem 0.4rem;
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
+  color: var(--dos-cyan);
+}
+
+.dos-drop-sub {
+  margin: 0;
+  font-size: 0.7rem;
+  color: #555;
+  text-align: center;
+}
+
+/* ── DOS Footer (function key bar) ─────────────────────────────── */
+.dos-footer {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  background: var(--dos-blue);
+  color: var(--dos-grey);
+  padding: 0.3rem 1rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.03em;
+  border-top: 1px solid #0050a8;
+  flex-shrink: 0;
+  opacity: 0.8;
 }
 
 /* ── Loading spinner ───────────────────────────────────────────── */
@@ -785,6 +913,22 @@ select:focus {
 
   .settings-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .dos-body {
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .dos-terminal {
+    padding: 0.75rem 1rem;
+  }
+
+  .dos-footer {
+    gap: 1rem;
+    font-size: 0.6rem;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }
 

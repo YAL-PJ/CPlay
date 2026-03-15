@@ -34,7 +34,7 @@
     <section class="panel controls-panel">
       <h1>Load &amp; Play</h1>
       <p class="subtle">
-        Drop a <strong>.jsdos</strong> bundle to play locally. Nothing leaves your browser.
+        Drop a <strong>.jsdos</strong> bundle or <strong>.zip</strong> to play locally. Nothing leaves your browser.
       </p>
 
       <label class="dropzone" id="dropzone">
@@ -54,10 +54,12 @@
         </p>
       </div>
 
+      <!-- Library section hidden until ready
       <div class="library-section">
         <button id="openLibraryBtn" class="action-btn" type="button" style="width:100%">Open Game Library</button>
         <p class="small-note">Browse the A:\GAMES freeware &amp; shareware catalog.</p>
       </div>
+      -->
 
       <div class="saves-section">
         <p class="section-title">Saved Games</p>
@@ -106,23 +108,41 @@
       <div id="playerShell">
         <div id="dos-player" aria-label="DOS player"></div>
         <div id="emptyState" class="empty-state">
-          <div class="empty-state-art" aria-hidden="true">
-            ________________________________________
-            /                                        \
-            |   _____ ____ _      ____  _           |
-            |  / __  \\  _ \\ |    / __ \\ \ \ /\ / / |
-            | | /  \/| |_) | |   / /  \ \ \ V  V /  |
-            | | |    |  __/| |  | |    | | \ /\ /   |
-            | | \__/\| |   | |__| \__/\| | | | |    |
-            |  \____/|_|   |_____\____/|_| |_| |_|    |
-            |                                        |
-            | C:\> CD GAMES                          |
-            | C:\GAMES> DIR                          |
-            |                                        |
-            | [SYSTEM READY]                         |
-            \________________________________________/
+          <div class="dos-boot-screen">
+            <div class="dos-header">
+              <span class="dos-header-title">C:\PLAY</span>
+              <span class="dos-header-ver">v1.0</span>
+            </div>
+            <div class="dos-body">
+              <div class="dos-terminal">
+                <p class="dos-line"><span class="dos-prompt">C:\&gt;</span> CD GAMES</p>
+                <p class="dos-line"><span class="dos-prompt">C:\GAMES&gt;</span> DIR</p>
+                <p class="dos-line dos-muted">&nbsp;</p>
+                <p class="dos-line dos-muted"> Volume in drive C is PLAY</p>
+                <p class="dos-line dos-muted"> Directory of C:\GAMES</p>
+                <p class="dos-line dos-muted">&nbsp;</p>
+                <p class="dos-line dos-muted"> &lt;No files found&gt;</p>
+                <p class="dos-line">&nbsp;</p>
+                <p class="dos-line"><span class="dos-prompt">C:\GAMES&gt;</span> <span class="dos-cursor">_</span></p>
+              </div>
+              <div class="dos-dropzone-area" id="playerDropzone">
+                <div class="dos-drop-icon" aria-hidden="true">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+                    <path d="M3 15v4a2 2 0 002 2h14a2 2 0 002-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                </div>
+                <p class="dos-drop-main">Drop a <kbd>.jsdos</kbd> bundle or <kbd>.zip</kbd> to play locally</p>
+                <p class="dos-drop-sub">Nothing leaves your browser. Or paste a URL in the sidebar.</p>
+              </div>
+            </div>
+            <div class="dos-footer">
+              <span>640K conventional memory</span>
+              <span>SoundBlaster 16 detected</span>
+              <span>Mouse driver v8.20</span>
+            </div>
           </div>
-          <p>Drop a <kbd>.jsdos</kbd> file or paste a URL to begin.</p>
         </div>
       </div>
     </section>
