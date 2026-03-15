@@ -15,6 +15,8 @@ const dom = {
   emptyState: document.getElementById("emptyState"),
   savesList: document.getElementById("savesList"),
   playerDropzone: document.getElementById("playerDropzone"),
+  soundToggleBtn: document.getElementById("soundToggleBtn"),
+  soundToggleFS: document.getElementById("soundToggleFS"),
 };
 
 const settingsFields = {
@@ -61,6 +63,22 @@ function closeOrphanedAudioContexts() {
   trackedAudioContexts.clear();
   try { if (window.audioContext && window.audioContext.state !== "closed") window.audioContext.close().catch(() => { }); } catch { }
   try { dom.playerHost.querySelectorAll("canvas").forEach(c => c.audioCtx?.state !== "closed" && c.audioCtx.close().catch(() => { })); } catch { }
+}
+
+function syncSoundIndicator() {
+  const muted = readSettings().sound === "off";
+  [dom.soundToggleBtn, dom.soundToggleFS].forEach(btn => {
+    if (btn) btn.classList.toggle("muted", muted);
+  });
+}
+
+function toggleSound() {
+  const s = readSettings();
+  const newVal = s.sound === "off" ? "on" : "off";
+  if (settingsFields.sound) settingsFields.sound.value = newVal;
+  persistSettings();
+  applySoundSetting();
+  syncSoundIndicator();
 }
 
 function applySoundSetting() {
@@ -116,7 +134,7 @@ async function startDos(bundleUrl) {
     if (!ci) throw new Error("Dos initialization returned null");
     state.ci = ci; state.isRunning = true; state.currentBundle = bundleUrl; updateUI();
     ci.events?.().onTerminate(() => stopCurrent().then(() => showEmptyState(true)));
-    hideLoading(); setStatus("System Ready - Drive A:", "ok"); applySoundSetting(); setTimeout(applySoundSetting, 500); setTimeout(applySoundSetting, 1500); return { ok: true };
+    hideLoading(); setStatus("System Ready - Drive A:", "ok"); applySoundSetting(); setTimeout(applySoundSetting, 500); setTimeout(applySoundSetting, 1500); setTimeout(applySoundSetting, 3000); setTimeout(applySoundSetting, 5000); return { ok: true };
   } catch (err) {
     if (handleExitStatus(err)) { await stopCurrent(); return { ok: true }; }
     hideLoading(); setStatus(`System Error: ${err.message || "Unknown"}`, "error"); state.isRunning = false; updateUI();
@@ -232,6 +250,8 @@ function setupEventListeners() {
   dom.stopBtn?.addEventListener("click", () => stopCurrent().then(() => setStatus("Stopped")));
   dom.saveBtn?.addEventListener("click", saveGameState);
   dom.fullscreenBtn?.addEventListener("click", () => !document.fullscreenElement ? dom.playerShell?.requestFullscreen() : document.exitFullscreen());
+  dom.soundToggleBtn?.addEventListener("click", toggleSound);
+  dom.soundToggleFS?.addEventListener("click", toggleSound);
 
   // Drag-and-drop on the player area (DOS screen)
   const playerDrop = dom.playerShell;
@@ -240,13 +260,13 @@ function setupEventListeners() {
     playerDrop.addEventListener("dragleave", e => { if (!playerDrop.contains(e.relatedTarget)) playerDrop.classList.remove("player-dragging"); });
     playerDrop.addEventListener("drop", e => { e.preventDefault(); playerDrop.classList.remove("player-dragging"); loadUserBundle(e.dataTransfer.files[0]); });
   }
-  Object.values(settingsFields).forEach(f => f?.addEventListener("change", () => { persistSettings(); applySoundSetting(); }));
+  Object.values(settingsFields).forEach(f => f?.addEventListener("change", () => { persistSettings(); applySoundSetting(); syncSoundIndicator(); }));
 }
 
 window.addEventListener("unhandledrejection", event => { if (handleExitStatus(event.reason)) event.preventDefault(); });
 
 document.addEventListener("DOMContentLoaded", async () => {
-  hydrateSettingsUI(); setupEventListeners();
+  hydrateSettingsUI(); setupEventListeners(); syncSoundIndicator();
   renderSavesList();
   setStatus("Ready — drop a .jsdos bundle or paste a URL to play", "ok"); updateUI();
 
