@@ -42,13 +42,36 @@ function readSettings() { try { const stored = localStorage.getItem("cplay.setti
 function persistSettings() { const value = { cycles: clamp(Number(settingsFields.cycles.value) || defaultSettings.cycles, 500, 50000), memsize: clamp(Number(settingsFields.memsize.value) || defaultSettings.memsize, 8, 64), sound: settingsFields.sound.value === "off" ? "off" : "on", themeTint: ["amber", "green", "ice"].includes(settingsFields.themeTint.value) ? settingsFields.themeTint.value : "amber" }; localStorage.setItem("cplay.settings", JSON.stringify(value)); document.documentElement.setAttribute("data-tint", value.themeTint); document.body.dataset.tint = value.themeTint; }
 function hydrateSettingsUI() { const s = readSettings(); if (settingsFields.cycles) settingsFields.cycles.value = s.cycles; if (settingsFields.memsize) settingsFields.memsize.value = s.memsize; if (settingsFields.sound) settingsFields.sound.value = s.sound; if (settingsFields.themeTint) settingsFields.themeTint.value = s.themeTint; document.documentElement.setAttribute("data-tint", s.themeTint); document.body.dataset.tint = s.themeTint; }
 
+const trackedAudioContexts = new Set();
+const OriginalAudioContext = window.AudioContext || window.webkitAudioContext;
+if (OriginalAudioContext) {
+  const Patched = function (...args) {
+    const ctx = new OriginalAudioContext(...args);
+    trackedAudioContexts.add(ctx);
+    if (readSettings().sound === "off") ctx.suspend().catch(() => { });
+    return ctx;
+  };
+  Patched.prototype = OriginalAudioContext.prototype;
+  if (window.AudioContext) window.AudioContext = Patched;
+  if (window.webkitAudioContext) window.webkitAudioContext = Patched;
+}
+
 function closeOrphanedAudioContexts() {
+  trackedAudioContexts.forEach(ctx => { try { if (ctx.state !== "closed") ctx.close().catch(() => { }); } catch { } });
+  trackedAudioContexts.clear();
   try { if (window.audioContext && window.audioContext.state !== "closed") window.audioContext.close().catch(() => { }); } catch { }
   try { dom.playerHost.querySelectorAll("canvas").forEach(c => c.audioCtx?.state !== "closed" && c.audioCtx.close().catch(() => { })); } catch { }
 }
 
 function applySoundSetting() {
   const muted = readSettings().sound === "off";
+  trackedAudioContexts.forEach(ctx => {
+    try {
+      if (ctx.state === "closed") return;
+      if (muted && ctx.state === "running") ctx.suspend().catch(() => { });
+      if (!muted && ctx.state === "suspended") ctx.resume().catch(() => { });
+    } catch { }
+  });
   try {
     if (window.audioContext && window.audioContext.state !== "closed") {
       if (muted && window.audioContext.state === "running") window.audioContext.suspend().catch(() => { });
@@ -93,7 +116,7 @@ async function startDos(bundleUrl) {
     if (!ci) throw new Error("Dos initialization returned null");
     state.ci = ci; state.isRunning = true; state.currentBundle = bundleUrl; updateUI();
     ci.events?.().onTerminate(() => stopCurrent().then(() => showEmptyState(true)));
-    hideLoading(); setStatus("System Ready - Drive A:", "ok"); setTimeout(applySoundSetting, 200); return { ok: true };
+    hideLoading(); setStatus("System Ready - Drive A:", "ok"); applySoundSetting(); setTimeout(applySoundSetting, 500); setTimeout(applySoundSetting, 1500); return { ok: true };
   } catch (err) {
     if (handleExitStatus(err)) { await stopCurrent(); return { ok: true }; }
     hideLoading(); setStatus(`System Error: ${err.message || "Unknown"}`, "error"); state.isRunning = false; updateUI();
