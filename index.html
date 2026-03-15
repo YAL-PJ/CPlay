@@ -6,7 +6,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>C:\PLAY — DOS Games in Your Browser</title>
   <meta name="description"
-    content="C:\PLAY lets you run DOS games in your browser with no install. Load your own .jsdos bundle locally, tweak emulator settings, and play instantly." />
+    content="Play classic DOS games instantly in your browser — no download, no install. Free online DOS emulator with save states, sound, and a curated freeware game library." />
+  <meta name="keywords" content="DOS games, play DOS games online, DOS emulator, browser DOS, retro games, classic PC games, free DOS games, js-dos, online DOS player, freeware DOS games, shareware games" />
+  <meta name="author" content="C:\PLAY" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://yal-pj.github.io/CPlay/" />
+
+  <!-- Open Graph / Social sharing -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="C:\PLAY — Play DOS Games in Your Browser" />
+  <meta property="og:description" content="Free online DOS emulator. Play classic DOS games instantly — no download, no install. Drag-and-drop your own games or browse the curated freeware library." />
+  <meta property="og:url" content="https://yal-pj.github.io/CPlay/" />
+  <meta property="og:image" content="https://yal-pj.github.io/CPlay/assets/og-preview.png" />
+  <meta property="og:site_name" content="C:\PLAY" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="C:\PLAY — Play DOS Games in Your Browser" />
+  <meta name="twitter:description" content="Free online DOS emulator. Play classic DOS games instantly in your browser." />
+  <meta name="twitter:image" content="https://yal-pj.github.io/CPlay/assets/og-preview.png" />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "C:\\PLAY",
+    "url": "https://yal-pj.github.io/CPlay/",
+    "description": "Free online DOS game emulator. Play classic DOS games instantly in your browser with no download or install required.",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Any (browser-based)",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "browserRequirements": "Requires a modern web browser with JavaScript enabled"
+  }
+  </script>
+
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F579;</text></svg>" />
   <link rel="preconnect" href="https://v8.js-dos.com" />
@@ -127,6 +161,27 @@
       </div>
     </section>
   </main>
+
+  <!-- Analytics: Replace with your tracking snippet.
+       Recommended free options:
+       - Google Analytics: https://analytics.google.com (most popular, free)
+       - Plausible:        https://plausible.io (privacy-friendly, paid)
+       - GoatCounter:      https://www.goatcounter.com (free for non-commercial)
+       - Umami:            https://umami.is (free, self-hosted)
+
+       Example for GoatCounter (free, no-cookie, privacy-friendly):
+       <script data-goatcounter="https://YOURSITE.goatcounter.com/count"
+               async src="//gc.zgo.at/count.js"></script>
+
+       Example for Google Analytics (gtag.js):
+       <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+       <script>
+         window.dataLayer = window.dataLayer || [];
+         function gtag(){dataLayer.push(arguments);}
+         gtag('js', new Date());
+         gtag('config', 'G-XXXXXXXXXX');
+       </script>
+  -->
 
   <script src="https://v8.js-dos.com/latest/js-dos.js"></script>
   <script type="module" src="./app.js"></script>
