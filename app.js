@@ -14,7 +14,7 @@ const dom = {
   playerHost: document.getElementById("dos-player"),
   emptyState: document.getElementById("emptyState"),
   savesList: document.getElementById("savesList"),
-  openLibraryBtn: document.getElementById("openLibraryBtn"),
+  playerDropzone: document.getElementById("playerDropzone"),
 };
 
 const settingsFields = {
@@ -209,11 +209,14 @@ function setupEventListeners() {
   dom.stopBtn?.addEventListener("click", () => stopCurrent().then(() => setStatus("Stopped")));
   dom.saveBtn?.addEventListener("click", saveGameState);
   dom.fullscreenBtn?.addEventListener("click", () => !document.fullscreenElement ? dom.playerShell?.requestFullscreen() : document.exitFullscreen());
-  dom.openLibraryBtn?.addEventListener("click", () => {
-    const libraryUrl = new URL("https://yal-pj.github.io/dos-freeware-games-library/webapp/");
-    libraryUrl.searchParams.set("cplay", window.location.href.split("?")[0]);
-    window.open(libraryUrl.toString(), "_blank", "noopener");
-  });
+
+  // Drag-and-drop on the player area (DOS screen)
+  const playerDrop = dom.playerShell;
+  if (playerDrop) {
+    playerDrop.addEventListener("dragover", e => { e.preventDefault(); playerDrop.classList.add("player-dragging"); });
+    playerDrop.addEventListener("dragleave", e => { if (!playerDrop.contains(e.relatedTarget)) playerDrop.classList.remove("player-dragging"); });
+    playerDrop.addEventListener("drop", e => { e.preventDefault(); playerDrop.classList.remove("player-dragging"); loadUserBundle(e.dataTransfer.files[0]); });
+  }
   Object.values(settingsFields).forEach(f => f?.addEventListener("change", () => { persistSettings(); applySoundSetting(); }));
 }
 
