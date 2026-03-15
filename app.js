@@ -261,6 +261,17 @@ function setupEventListeners() {
     playerDrop.addEventListener("drop", e => { e.preventDefault(); playerDrop.classList.remove("player-dragging"); loadUserBundle(e.dataTransfer.files[0]); });
   }
   Object.values(settingsFields).forEach(f => f?.addEventListener("change", () => { persistSettings(); applySoundSetting(); syncSoundIndicator(); }));
+
+  // Allow Space and Enter to trigger the js-dos play button (the overlay shown before emulation starts)
+  document.addEventListener("keydown", e => {
+    if (e.key !== " " && e.key !== "Enter") return;
+    // Don't intercept if user is typing in an input/textarea/button
+    const tag = document.activeElement?.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || tag === "BUTTON") return;
+    // Look for the js-dos play button inside the player host
+    const playBtn = dom.playerHost?.querySelector(".play-button");
+    if (playBtn) { e.preventDefault(); playBtn.click(); }
+  });
 }
 
 window.addEventListener("unhandledrejection", event => { if (handleExitStatus(event.reason)) event.preventDefault(); });
