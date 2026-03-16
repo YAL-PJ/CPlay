@@ -347,12 +347,17 @@ function setupEventListeners() {
   // Allow Space and Enter to trigger the js-dos play button (the overlay shown before emulation starts)
   document.addEventListener("keydown", e => {
     if (e.key !== " " && e.key !== "Enter") return;
-    // Don't intercept if user is typing in an input/textarea/button
+    // Don't intercept if user is typing in an input/textarea
     const tag = document.activeElement?.tagName;
-    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || tag === "BUTTON") return;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
     // Look for the js-dos play button inside the player host
     const playBtn = dom.playerHost?.querySelector(".play-button");
-    if (playBtn) { e.preventDefault(); playBtn.click(); }
+    if (playBtn) {
+      e.preventDefault();
+      // Blur any focused button so it doesn't also activate from the keyup
+      if (tag === "BUTTON") document.activeElement.blur();
+      playBtn.click();
+    }
   });
 }
 
