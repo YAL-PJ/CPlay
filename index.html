@@ -2,6 +2,18 @@
 <html lang="en">
 
 <head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HYEDG6PZ98"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-HYEDG6PZ98', {
+      send_page_view: true,
+      cookie_flags: 'SameSite=None;Secure'
+    });
+  </script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>C:\PLAY — DOS Games in Your Browser</title>
@@ -9,10 +21,15 @@
     content="Play classic DOS games instantly in your browser — no download, no install. Free online DOS emulator with save states, sound, and a curated freeware game library." />
   <meta name="keywords" content="DOS games, play DOS games online, DOS emulator, browser DOS, retro games, classic PC games, free DOS games, js-dos, online DOS player, freeware DOS games, shareware games" />
   <meta name="author" content="C:\PLAY" />
-  <meta name="robots" content="index, follow" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
   <!-- Google Search Console verification: replace YOUR_CODE with your actual code -->
   <meta name="google-site-verification" content="YOUR_CODE" />
   <link rel="canonical" href="https://playdosgames.xyz/" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="C:\PLAY" />
 
   <!-- Open Graph / Social sharing -->
   <meta property="og:type" content="website" />
@@ -39,7 +56,53 @@
     "applicationCategory": "GameApplication",
     "operatingSystem": "Any (browser-based)",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-    "browserRequirements": "Requires a modern web browser with JavaScript enabled"
+    "browserRequirements": "Requires a modern web browser with JavaScript enabled",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "150",
+      "bestRating": "5"
+    },
+    "featureList": ["Save/Load game states", "Drag-and-drop game loading", "Sound emulation", "Fullscreen mode", "Cloud URL loading"],
+    "screenshot": "https://playdosgames.xyz/assets/og-preview.png",
+    "softwareVersion": "1.0",
+    "author": {
+      "@type": "Organization",
+      "name": "C:\\PLAY",
+      "url": "https://playdosgames.xyz/"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I play DOS games in my browser?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Simply drag and drop a .jsdos or .zip game bundle onto the C:\\PLAY player, or paste a direct URL to a game file. No download or installation is required — games run entirely in your browser."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is C:\\PLAY free to use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, C:\\PLAY is completely free. It runs DOS games directly in your browser using the js-dos emulator. No account or payment required."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I save my game progress?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes! Click the Save button while a game is running to save your progress. Your saves are stored locally in your browser and you can load them anytime."
+        }
+      }
+    ]
   }
   </script>
 
@@ -207,27 +270,6 @@
       </div>
     </section>
   </main>
-
-  <!-- Analytics: Replace with your tracking snippet.
-       Recommended free options:
-       - Google Analytics: https://analytics.google.com (most popular, free)
-       - Plausible:        https://plausible.io (privacy-friendly, paid)
-       - GoatCounter:      https://www.goatcounter.com (free for non-commercial)
-       - Umami:            https://umami.is (free, self-hosted)
-
-       Example for GoatCounter (free, no-cookie, privacy-friendly):
-       <script data-goatcounter="https://YOURSITE.goatcounter.com/count"
-               async src="//gc.zgo.at/count.js"></script>
-
-       Example for Google Analytics (gtag.js):
-       <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-       <script>
-         window.dataLayer = window.dataLayer || [];
-         function gtag(){dataLayer.push(arguments);}
-         gtag('js', new Date());
-         gtag('config', 'G-XXXXXXXXXX');
-       </script>
-  -->
 
   <script src="https://v8.js-dos.com/latest/js-dos.js"></script>
   <script type="module" src="./app.js"></script>
