@@ -203,7 +203,7 @@ async function startDos(bundleUrl) {
     await stopCurrent();
     showEmptyState(false); showLoading("Initializing System..."); setStatus("Booting...", "");
     if (window.emulators) window.emulators.pathPrefix = "https://v8.js-dos.com/latest/emulators/";
-    const result = window.Dos(dom.playerHost, { url: bundleUrl, dosboxConf: buildDosboxConf(), kiosk: true });
+    const result = window.Dos(dom.playerHost, { url: bundleUrl, dosboxConf: buildDosboxConf(), kiosk: true, autoStart: true });
     const ci = (result instanceof Promise) ? await result : result;
     if (!ci) throw new Error("Dos initialization returned null");
     state.ci = ci; state.isRunning = true; state.currentBundle = bundleUrl; updateUI();
@@ -350,13 +350,21 @@ function setupEventListeners() {
     // Don't intercept if user is typing in an input/textarea
     const tag = document.activeElement?.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-    // Look for the js-dos play button inside the player host
-    const playBtn = dom.playerHost?.querySelector(".play-button");
+    // Look for the js-dos play button or click-to-start overlay
+    const host = dom.playerHost || document;
+    const playBtn = host.querySelector(".play-button")
+      || host.querySelector(".emulator-click-to-start-overlay")
+      || host.querySelector(".emulator-click-to-start-icon")
+      || document.querySelector(".play-button")
+      || document.querySelector(".emulator-click-to-start-overlay");
     if (playBtn) {
       e.preventDefault();
       // Blur any focused button so it doesn't also activate from the keyup
       if (tag === "BUTTON") document.activeElement.blur();
-      playBtn.click();
+      // Dispatch proper pointer/mouse events since js-dos may not respond to .click()
+      playBtn.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
+      playBtn.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, cancelable: true }));
+      playBtn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
     }
   });
 }
