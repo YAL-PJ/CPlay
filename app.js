@@ -32,6 +32,79 @@ const state = { ci: null, isRunning: false, startingLock: false, objectUrl: null
 const log = (...a) => console.log("[CPLAY]", ...a);
 const logError = (...a) => console.error("[CPLAY ERROR]", ...a);
 
+// ── Analytics helpers ────────────────────────────────────────────
+function trackEvent(eventName, params = {}) {
+  try { if (typeof gtag === "function") gtag("event", eventName, params); } catch { }
+}
+
+// Track Core Web Vitals for SEO performance insights
+function trackWebVitals() {
+  if (!("PerformanceObserver" in window)) return;
+  // Largest Contentful Paint
+  try {
+    new PerformanceObserver(list => {
+      const entries = list.getEntries();
+      const last = entries[entries.length - 1];
+      trackEvent("web_vital_lcp", { value: Math.round(last.startTime), metric_id: "LCP" });
+    }).observe({ type: "largest-contentful-paint", buffered: true });
+  } catch { }
+  // First Input Delay
+  try {
+    new PerformanceObserver(list => {
+      list.getEntries().forEach(entry => {
+        trackEvent("web_vital_fid", { value: Math.round(entry.processingStart - entry.startTime), metric_id: "FID" });
+      });
+    }).observe({ type: "first-input", buffered: true });
+  } catch { }
+  // Cumulative Layout Shift
+  try {
+    let clsValue = 0;
+    new PerformanceObserver(list => {
+      list.getEntries().forEach(entry => { if (!entry.hadRecentInput) clsValue += entry.value; });
+      trackEvent("web_vital_cls", { value: Math.round(clsValue * 1000), metric_id: "CLS" });
+    }).observe({ type: "layout-shift", buffered: true });
+  } catch { }
+}
+
+// Track scroll depth
+function trackScrollDepth() {
+  const milestones = new Set();
+  window.addEventListener("scroll", () => {
+    const scrollPct = Math.round((window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100);
+    [25, 50, 75, 100].forEach(m => {
+      if (scrollPct >= m && !milestones.has(m)) {
+        milestones.add(m);
+        trackEvent("scroll_depth", { percent: m });
+      }
+    });
+  }, { passive: true });
+}
+
+// Track user engagement time
+function trackEngagement() {
+  let engagedSeconds = 0;
+  let isActive = true;
+  document.addEventListener("visibilitychange", () => { isActive = document.visibilityState === "visible"; });
+  setInterval(() => { if (isActive) engagedSeconds++; }, 1000);
+  window.addEventListener("beforeunload", () => {
+    trackEvent("engagement_time", { seconds: engagedSeconds, game_was_played: state.isRunning || state.currentBundle !== "" });
+  });
+}
+
+// Track outbound link clicks
+function trackOutboundLinks() {
+  document.addEventListener("click", e => {
+    const link = e.target.closest("a[href]");
+    if (!link) return;
+    try {
+      const url = new URL(link.href);
+      if (url.hostname !== window.location.hostname) {
+        trackEvent("outbound_click", { url: link.href });
+      }
+    } catch { }
+  });
+}
+
 function setStatus(message, type = "ok") { if (!dom.statusText) return; dom.statusText.textContent = `C:\\PLAY> ${message}${message.endsWith("_") ? "" : "_"}`; dom.statusText.className = type; }
 function handleExitStatus(err) { const isExit = err && (err.name === "ExitStatus" || (err.message && err.message.includes("ExitStatus"))); return !!(isExit && (err.status === 0 || !err.status)); }
 function showEmptyState(visible) { if (dom.emptyState) dom.emptyState.style.display = visible ? "" : "none"; }
@@ -75,6 +148,7 @@ function syncSoundIndicator() {
 function toggleSound() {
   const s = readSettings();
   const newVal = s.sound === "off" ? "on" : "off";
+  trackEvent("sound_toggle", { sound_state: newVal });
   if (settingsFields.sound) settingsFields.sound.value = newVal;
   persistSettings();
   applySoundSetting();
@@ -134,10 +208,13 @@ async function startDos(bundleUrl) {
     if (!ci) throw new Error("Dos initialization returned null");
     state.ci = ci; state.isRunning = true; state.currentBundle = bundleUrl; updateUI();
     ci.events?.().onTerminate(() => stopCurrent().then(() => showEmptyState(true)));
-    hideLoading(); setStatus("System Ready - Drive A:", "ok"); applySoundSetting(); setTimeout(applySoundSetting, 500); setTimeout(applySoundSetting, 1500); setTimeout(applySoundSetting, 3000); setTimeout(applySoundSetting, 5000); return { ok: true };
+    hideLoading(); setStatus("System Ready - Drive A:", "ok"); applySoundSetting(); setTimeout(applySoundSetting, 500); setTimeout(applySoundSetting, 1500); setTimeout(applySoundSetting, 3000); setTimeout(applySoundSetting, 5000);
+    trackEvent("game_start", { bundle_url: bundleUrl, method: state.objectUrl ? "file_upload" : "url" });
+    return { ok: true };
   } catch (err) {
     if (handleExitStatus(err)) { await stopCurrent(); return { ok: true }; }
     hideLoading(); setStatus(`System Error: ${err.message || "Unknown"}`, "error"); state.isRunning = false; updateUI();
+    trackEvent("game_error", { error_message: err?.message || "Unknown", bundle_url: bundleUrl });
     return { ok: false, errorMessage: err?.message || "Unknown error" };
   } finally { state.startingLock = false; }
 }
@@ -146,6 +223,7 @@ async function loadUserBundle(file) {
   if (!file) return;
   const name = file.name.toLowerCase();
   if (!name.endsWith(".jsdos") && !name.endsWith(".zip")) return setStatus("Only .jsdos or .zip bundles are supported.", "error");
+  trackEvent("file_upload", { file_name: file.name, file_size: file.size, file_type: name.endsWith(".jsdos") ? "jsdos" : "zip" });
   const newUrl = URL.createObjectURL(file); showLoading(`Loading ${file.name}…`); setStatus(`Loading ${file.name}…`, "");
   const result = await startDos(newUrl);
   if (result.ok) state.objectUrl = newUrl; else URL.revokeObjectURL(newUrl);
@@ -160,6 +238,8 @@ async function loadBundleFromUrl(rawUrl) {
   if (!typedUrl) return setStatus("Paste a URL first.", "error");
   if (!/^https?:\/\//i.test(typedUrl)) return setStatus("Invalid URL protocol.", "error");
   let finalUrl = typedUrl; let note = "";
+  const urlSource = /github\.com/i.test(typedUrl) ? "github" : /drive\.google/i.test(typedUrl) ? "google_drive" : /dropbox/i.test(typedUrl) ? "dropbox" : /onedrive|1drv/i.test(typedUrl) ? "onedrive" : "direct";
+  trackEvent("url_load", { url_source: urlSource });
   try {
     if (/^https:\/\/github\.com\/[^/]+\/[^/]+\/?$/i.test(typedUrl)) { finalUrl = await resolveGithubRepoArchive(typedUrl); note = "GitHub archive."; }
     else finalUrl = normalizeGithubUrl(typedUrl);
@@ -206,6 +286,7 @@ async function saveGameState() {
   let name = "Unknown";
   try { const url = new URL(state.currentBundle); name = decodeURIComponent((url.pathname.split("/").pop() || "").replace(/\.(jsdos|zip)$/i, "")) || "Custom Game"; } catch { }
   await putSave({ id: `save-${Date.now()}`, name, timestamp: Date.now(), bundleUrl: state.currentBundle, screenshot: captureScreenshot(), state: result.state ? Array.from(result.state) : null });
+  trackEvent("game_save", { game_name: name });
   setStatus(`Saved "${name}"`, "ok"); await renderSavesList();
 }
 
@@ -216,6 +297,7 @@ async function loadGameState(id) {
     state.currentBundle = save.bundleUrl;
     if (save.state && state.ci && typeof state.ci.restore === "function") { await state.ci.restore(new Uint8Array(save.state)); setStatus(`Restored "${save.name}"`, "ok"); }
     else { setStatus(`Loaded "${save.name}"`, "ok"); }
+    trackEvent("game_load_save", { game_name: save.name });
   } catch { setStatus("Restore failed.", "error"); }
 }
 
@@ -234,7 +316,7 @@ async function renderSavesList() {
       el.appendChild(info);
       const actions = document.createElement("div"); actions.className = "save-actions";
       const loadBtn = document.createElement("button"); loadBtn.className = "action-btn"; loadBtn.textContent = "Load"; loadBtn.addEventListener("click", () => loadGameState(save.id));
-      const delBtn = document.createElement("button"); delBtn.className = "ghost-btn"; delBtn.textContent = "Del"; delBtn.addEventListener("click", () => confirm("Delete this save?") && deleteSave(save.id).then(renderSavesList));
+      const delBtn = document.createElement("button"); delBtn.className = "ghost-btn"; delBtn.textContent = "Del"; delBtn.addEventListener("click", () => confirm("Delete this save?") && (trackEvent("game_delete_save", { game_name: save.name }), deleteSave(save.id).then(renderSavesList)));
       actions.append(loadBtn, delBtn); el.appendChild(actions); dom.savesList.appendChild(el);
     });
   } catch { }
@@ -247,9 +329,9 @@ function setupEventListeners() {
   dom.bundleInput?.addEventListener("change", e => { loadUserBundle(e.target.files[0]); e.target.value = ""; });
   dom.loadUrlBtn?.addEventListener("click", () => loadBundleFromUrl(dom.bundleUrlInput?.value));
   dom.bundleUrlInput?.addEventListener("keydown", e => { if (e.key === "Enter") loadBundleFromUrl(dom.bundleUrlInput.value); });
-  dom.stopBtn?.addEventListener("click", () => stopCurrent().then(() => setStatus("Stopped")));
+  dom.stopBtn?.addEventListener("click", () => { trackEvent("game_stop"); stopCurrent().then(() => setStatus("Stopped")); });
   dom.saveBtn?.addEventListener("click", saveGameState);
-  dom.fullscreenBtn?.addEventListener("click", () => !document.fullscreenElement ? dom.playerShell?.requestFullscreen() : document.exitFullscreen());
+  dom.fullscreenBtn?.addEventListener("click", () => { trackEvent("fullscreen_toggle", { entering: !document.fullscreenElement }); !document.fullscreenElement ? dom.playerShell?.requestFullscreen() : document.exitFullscreen(); });
   dom.soundToggleBtn?.addEventListener("click", toggleSound);
   dom.soundToggleFS?.addEventListener("click", toggleSound);
 
@@ -260,7 +342,7 @@ function setupEventListeners() {
     playerDrop.addEventListener("dragleave", e => { if (!playerDrop.contains(e.relatedTarget)) playerDrop.classList.remove("player-dragging"); });
     playerDrop.addEventListener("drop", e => { e.preventDefault(); playerDrop.classList.remove("player-dragging"); loadUserBundle(e.dataTransfer.files[0]); });
   }
-  Object.values(settingsFields).forEach(f => f?.addEventListener("change", () => { persistSettings(); applySoundSetting(); syncSoundIndicator(); }));
+  Object.values(settingsFields).forEach(f => f?.addEventListener("change", () => { persistSettings(); applySoundSetting(); syncSoundIndicator(); trackEvent("settings_change", { cycles: settingsFields.cycles.value, memsize: settingsFields.memsize.value, sound: settingsFields.sound.value, theme: settingsFields.themeTint.value }); }));
 
   // Allow Space and Enter to trigger the js-dos play button (the overlay shown before emulation starts)
   document.addEventListener("keydown", e => {
@@ -280,6 +362,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   hydrateSettingsUI(); setupEventListeners(); syncSoundIndicator();
   renderSavesList();
   setStatus("Ready — drop a .jsdos bundle or paste a URL to play", "ok"); updateUI();
+
+  // Initialize analytics tracking
+  trackWebVitals();
+  trackScrollDepth();
+  trackEngagement();
+  trackOutboundLinks();
+  trackEvent("page_load", { referrer: document.referrer || "direct", screen_width: window.innerWidth, screen_height: window.innerHeight });
 
   // auto-launch if ?bundle= parameter is provided (from A:\GAMES library)
   const urlParams = new URLSearchParams(window.location.search);
