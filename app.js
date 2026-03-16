@@ -350,8 +350,13 @@ function setupEventListeners() {
     // Don't intercept if user is typing in an input/textarea
     const tag = document.activeElement?.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-    // Look for the js-dos play button inside the player host (or anywhere in the document)
-    const playBtn = dom.playerHost?.querySelector(".play-button") || document.querySelector(".play-button");
+    // Look for the js-dos play button or click-to-start overlay
+    const host = dom.playerHost || document;
+    const playBtn = host.querySelector(".play-button")
+      || host.querySelector(".emulator-click-to-start-overlay")
+      || host.querySelector(".emulator-click-to-start-icon")
+      || document.querySelector(".play-button")
+      || document.querySelector(".emulator-click-to-start-overlay");
     if (playBtn) {
       e.preventDefault();
       // Blur any focused button so it doesn't also activate from the keyup
