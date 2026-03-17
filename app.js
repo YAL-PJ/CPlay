@@ -193,7 +193,7 @@ async function stopCurrent() {
 
 function buildDosboxConf() {
   const s = readSettings();
-  return `\n[sdl]\nfullscreen=false\nfulldouble=true\n\n[dosbox]\nmachine=svga_s3\nmemsize=${s.memsize}\n\n[cpu]\ncore=auto\ncycles=${s.cycles}\n\n[mixer]\nnosound=${s.sound === "on" ? "false" : "true"}\nrate=44100\nblocksize=2048\nprebuffer=40\n`;
+  return `\n[sdl]\nfullscreen=false\nfulldouble=true\n\n[dosbox]\nmachine=svga_s3\nmemsize=${s.memsize}\n\n[cpu]\ncore=auto\ncycles=${s.cycles}\n\n[mixer]\nnosound=${s.sound === "on" ? "false" : "true"}\nrate=44100\nblocksize=2048\nprebuffer=40\n\n[autoexec]\nexit\n`;
 }
 
 async function startDos(bundleUrl) {
