@@ -165,12 +165,10 @@
         </p>
       </div>
 
-      <!-- Library section hidden until ready
       <div class="library-section">
-        <button id="openLibraryBtn" class="action-btn" type="button" style="width:100%">Open Game Library</button>
+        <button id="openLibraryBtn" class="action-btn" type="button" style="width:100%">&#x1F4BE; Open Game Library</button>
         <p class="small-note">Browse the A:\GAMES freeware &amp; shareware catalog.</p>
       </div>
-      -->
 
       <div class="saves-section">
         <p class="section-title">Saved Games</p>
@@ -244,10 +242,11 @@
                 <p class="dos-line dos-muted"> Volume in drive C is PLAY</p>
                 <p class="dos-line dos-muted"> Directory of C:\GAMES</p>
                 <p class="dos-line dos-muted">&nbsp;</p>
-                <p class="dos-line dos-muted"> &lt;No files found&gt;</p>
+                <div id="featuredGamesTerminal"><p class="dos-line dos-muted"> &lt;Loading library...&gt;</p></div>
                 <p class="dos-line">&nbsp;</p>
                 <p class="dos-line"><span class="dos-prompt">C:\GAMES&gt;</span> <span class="dos-cursor">_</span></p>
               </div>
+              <div id="featuredGameCards" class="featured-game-cards" hidden></div>
               <div class="dos-dropzone-area" id="playerDropzone">
                 <div class="dos-drop-icon" aria-hidden="true">
                   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
@@ -270,6 +269,15 @@
       </div>
     </section>
   </main>
+
+  <!-- Library Modal -->
+  <div id="libraryModal" class="library-modal" hidden>
+    <div class="library-modal-bar">
+      <span class="library-modal-title">A:\GAMES &mdash; DOS Freeware Library</span>
+      <button id="closeLibraryBtn" class="ghost-btn" type="button">&#x2715; Close</button>
+    </div>
+    <iframe id="libraryFrame" class="library-frame" src="" title="A:\GAMES DOS Freeware Library" sandbox="allow-scripts allow-popups allow-forms"></iframe>
+  </div>
 
   <script src="https://v8.js-dos.com/latest/js-dos.js"></script>
   <script type="module" src="./app.js"></script>

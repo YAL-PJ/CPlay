@@ -1,6 +1,6 @@
-/* ── C:\PLAY  —  app.js ─────────────────────────────────────────── */
+/* ── C:\PLAY  —  app.js ───────────────────────────────────────────────── */
 
-// ── DOM References ────────────────────────────────────────────────
+// ── DOM References ────────────────────────────────────────────
 const dom = {
   statusText: document.getElementById("statusText"),
   dropzone: document.getElementById("dropzone"),
@@ -17,6 +17,12 @@ const dom = {
   playerDropzone: document.getElementById("playerDropzone"),
   soundToggleBtn: document.getElementById("soundToggleBtn"),
   soundToggleFS: document.getElementById("soundToggleFS"),
+  openLibraryBtn: document.getElementById("openLibraryBtn"),
+  libraryModal: document.getElementById("libraryModal"),
+  libraryFrame: document.getElementById("libraryFrame"),
+  closeLibraryBtn: document.getElementById("closeLibraryBtn"),
+  featuredGameCards: document.getElementById("featuredGameCards"),
+  featuredGamesTerminal: document.getElementById("featuredGamesTerminal"),
 };
 
 const settingsFields = {
@@ -32,7 +38,12 @@ const state = { ci: null, isRunning: false, startingLock: false, objectUrl: null
 const log = (...a) => console.log("[CPLAY]", ...a);
 const logError = (...a) => console.error("[CPLAY ERROR]", ...a);
 
-// ── Analytics helpers ────────────────────────────────────────────
+const LIBRARY_JSON_URL = "https://raw.githubusercontent.com/yal-pj/dos-freeware-games-library/main/library.json";
+const FALLBACK_THUMB = "data:image/svg+xml," + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80"><rect width="120" height="80" fill="#0d1117"/><text y="48" x="60" text-anchor="middle" font-family="monospace" font-size="14" fill="#444">DOS</text></svg>'
+);
+
+// ── Analytics helpers ──────────────────────────────────────────
 function trackEvent(eventName, params = {}) {
   try { if (typeof gtag === "function") gtag("event", eventName, params); } catch { }
 }
@@ -322,6 +333,74 @@ async function renderSavesList() {
   } catch { }
 }
 
+// ── Library integration ────────────────────────────────────────────
+function openLibrary() {
+  if (!dom.libraryModal) return;
+  if (dom.libraryFrame && !dom.libraryFrame.src) {
+    dom.libraryFrame.src = "./library/";
+  }
+  dom.libraryModal.hidden = false;
+  document.body.style.overflow = "hidden";
+  trackEvent("library_open");
+}
+
+function closeLibrary() {
+  if (!dom.libraryModal) return;
+  dom.libraryModal.hidden = true;
+  document.body.style.overflow = "";
+}
+
+async function loadFeaturedGames() {
+  try {
+    const resp = await fetch(LIBRARY_JSON_URL);
+    if (!resp.ok) return;
+    const data = await resp.json();
+    if (!Array.isArray(data)) return;
+    const playable = data.filter(g => g.downloadUrl);
+    if (!playable.length) {
+      if (dom.featuredGamesTerminal) dom.featuredGamesTerminal.innerHTML = '<p class="dos-line dos-muted"> &lt;No games found&gt;</p>';
+      return;
+    }
+    if (dom.featuredGamesTerminal) {
+      dom.featuredGamesTerminal.innerHTML = `<p class="dos-line dos-muted">     ${playable.length} file(s) found &mdash; click a game to play</p>`;
+    }
+    const featured = playable.sort(() => Math.random() - 0.5).slice(0, 6);
+    renderFeaturedGameCards(featured);
+  } catch {
+    if (dom.featuredGamesTerminal) dom.featuredGamesTerminal.innerHTML = '<p class="dos-line dos-muted"> &lt;Library offline&gt;</p>';
+  }
+}
+
+function renderFeaturedGameCards(games) {
+  if (!dom.featuredGameCards) return;
+  dom.featuredGameCards.innerHTML = "";
+  games.forEach(g => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "featured-card";
+    btn.title = `Play ${g.title}`;
+
+    const img = document.createElement("img");
+    img.src = g.screenshot || FALLBACK_THUMB;
+    img.alt = g.title;
+    img.loading = "lazy";
+    img.addEventListener("error", () => { img.src = FALLBACK_THUMB; }, { once: true });
+
+    const label = document.createElement("span");
+    label.className = "featured-card-title";
+    label.textContent = g.title;
+
+    btn.appendChild(img);
+    btn.appendChild(label);
+    btn.addEventListener("click", () => {
+      trackEvent("featured_game_click", { title: g.title });
+      loadBundleFromUrl(g.downloadUrl);
+    });
+    dom.featuredGameCards.appendChild(btn);
+  });
+  dom.featuredGameCards.hidden = false;
+}
+
 function setupEventListeners() {
   dom.dropzone?.addEventListener("dragover", e => { e.preventDefault(); dom.dropzone.classList.add("dragging"); });
   dom.dropzone?.addEventListener("dragleave", () => dom.dropzone.classList.remove("dragging"));
@@ -334,6 +413,8 @@ function setupEventListeners() {
   dom.fullscreenBtn?.addEventListener("click", () => { trackEvent("fullscreen_toggle", { entering: !document.fullscreenElement }); !document.fullscreenElement ? dom.playerShell?.requestFullscreen() : document.exitFullscreen(); });
   dom.soundToggleBtn?.addEventListener("click", toggleSound);
   dom.soundToggleFS?.addEventListener("click", toggleSound);
+  dom.openLibraryBtn?.addEventListener("click", openLibrary);
+  dom.closeLibraryBtn?.addEventListener("click", closeLibrary);
 
   // Drag-and-drop on the player area (DOS screen)
   const playerDrop = dom.playerShell;
@@ -344,13 +425,28 @@ function setupEventListeners() {
   }
   Object.values(settingsFields).forEach(f => f?.addEventListener("change", () => { persistSettings(); applySoundSetting(); syncSoundIndicator(); trackEvent("settings_change", { cycles: settingsFields.cycles.value, memsize: settingsFields.memsize.value, sound: settingsFields.sound.value, theme: settingsFields.themeTint.value }); }));
 
-  // Allow Space and Enter to trigger the js-dos play button (the overlay shown before emulation starts)
+  // Library postMessage bridge
+  window.addEventListener("message", e => {
+    if (e.data?.type === "launchGame" && e.data.bundleUrl) {
+      closeLibrary();
+      loadBundleFromUrl(e.data.bundleUrl);
+      trackEvent("library_game_launch", { title: e.data.title || "" });
+    }
+    if (e.data?.type === "closeLibrary") {
+      closeLibrary();
+    }
+  });
+
+  // Space/Enter triggers js-dos play button; Escape closes library modal
   document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && dom.libraryModal && !dom.libraryModal.hidden) {
+      e.preventDefault();
+      closeLibrary();
+      return;
+    }
     if (e.key !== " " && e.key !== "Enter") return;
-    // Don't intercept if user is typing in an input/textarea
     const tag = document.activeElement?.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-    // Look for the js-dos play button or click-to-start overlay
     const host = dom.playerHost || document;
     const playBtn = host.querySelector(".play-button")
       || host.querySelector(".emulator-click-to-start-overlay")
@@ -359,9 +455,7 @@ function setupEventListeners() {
       || document.querySelector(".emulator-click-to-start-overlay");
     if (playBtn) {
       e.preventDefault();
-      // Blur any focused button so it doesn't also activate from the keyup
       if (tag === "BUTTON") document.activeElement.blur();
-      // Dispatch proper pointer/mouse events since js-dos may not respond to .click()
       playBtn.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
       playBtn.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, cancelable: true }));
       playBtn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
@@ -382,6 +476,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   trackEngagement();
   trackOutboundLinks();
   trackEvent("page_load", { referrer: document.referrer || "direct", screen_width: window.innerWidth, screen_height: window.innerHeight });
+
+  // Load featured games from library into boot screen
+  loadFeaturedGames();
 
   // auto-launch if ?bundle= parameter is provided (from A:\GAMES library)
   const urlParams = new URLSearchParams(window.location.search);
