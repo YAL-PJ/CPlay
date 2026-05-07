@@ -121,6 +121,7 @@ function handleExitStatus(err) { const isExit = err && (err.name === "ExitStatus
 function showEmptyState(visible) { if (dom.emptyState) dom.emptyState.style.display = visible ? "" : "none"; }
 function hideLoading() { document.getElementById("loadingOverlay")?.remove(); }
 function showLoading(message) { hideLoading(); const overlay = document.createElement("div"); overlay.className = "loading-overlay"; overlay.id = "loadingOverlay"; overlay.innerHTML = '<div class="spinner"></div>'; const p = document.createElement("p"); p.textContent = message; overlay.appendChild(p); dom.playerShell.appendChild(overlay); }
+function showGameCrashScreen(message) { const existing = document.getElementById("gameCrashOverlay"); if (existing) existing.remove(); const overlay = document.createElement("div"); overlay.id = "gameCrashOverlay"; overlay.className = "game-crash-overlay"; const box = document.createElement("div"); box.className = "crash-box"; const title = document.createElement("p"); title.className = "crash-title"; title.textContent = "⚠ GAME ERROR"; const msg = document.createElement("p"); msg.className = "crash-msg"; msg.textContent = message; const btn = document.createElement("button"); btn.className = "crash-dismiss ghost-btn"; btn.textContent = "Dismiss"; btn.addEventListener("click", () => overlay.remove()); box.append(title, msg, btn); overlay.appendChild(box); dom.playerShell?.appendChild(overlay); }
 function updateUI() { if (dom.stopBtn) dom.stopBtn.hidden = !state.isRunning; if (dom.saveBtn) dom.saveBtn.hidden = !state.isRunning; showEmptyState(!state.isRunning && !state.ci); }
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -463,7 +464,18 @@ function setupEventListeners() {
   });
 }
 
-window.addEventListener("unhandledrejection", event => { if (handleExitStatus(event.reason)) event.preventDefault(); });
+window.addEventListener("unhandledrejection", event => {
+  const err = event.reason;
+  const isExit = err && (err.name === "ExitStatus" || (err.message && err.message.includes("ExitStatus")));
+  if (!isExit) return;
+  event.preventDefault();
+  if (handleExitStatus(err)) return; // exit code 0 — clean exit, nothing to show
+  const code = err?.status ?? "?";
+  stopCurrent().then(() => {
+    setStatus(`Game crashed (exit code ${code})`, "error");
+    showGameCrashScreen(`The game exited unexpectedly (error code ${code}).\nThe bundle may be missing files or have a configuration error.`);
+  });
+});
 
 document.addEventListener("DOMContentLoaded", async () => {
   hydrateSettingsUI(); setupEventListeners(); syncSoundIndicator();

@@ -975,6 +975,58 @@ select:focus {
   min-height: 0;
 }
 
+/* ── Game crash overlay ─────────────────────────────────────────────────── */
+.game-crash-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 15;
+  animation: fadeIn 0.2s ease;
+}
+
+.crash-box {
+  border: 1px solid var(--err);
+  background: rgba(18, 4, 4, 0.97);
+  padding: 1.75rem 2rem;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(255, 107, 107, 0.25), inset 0 0 20px rgba(255, 107, 107, 0.04);
+}
+
+.crash-title {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--err);
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 16px rgba(255, 107, 107, 0.5);
+}
+
+.crash-msg {
+  margin: 0 0 1.25rem;
+  font-size: 0.75rem;
+  color: var(--dos-grey);
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.crash-dismiss {
+  font-size: 0.75rem;
+  color: var(--err);
+  border-color: rgba(255, 107, 107, 0.4);
+}
+
+.crash-dismiss:hover {
+  color: var(--err);
+  border-color: var(--err);
+  box-shadow: 0 0 12px rgba(255, 107, 107, 0.3);
+}
+
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 860px) {
   .layout {
