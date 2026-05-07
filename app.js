@@ -336,7 +336,7 @@ async function renderSavesList() {
 // ── Library integration ────────────────────────────────────────────
 function openLibrary() {
   if (!dom.libraryModal) return;
-  if (dom.libraryFrame && !dom.libraryFrame.src) {
+  if (dom.libraryFrame && !dom.libraryFrame.getAttribute('src')) {
     dom.libraryFrame.src = "./library/";
   }
   dom.libraryModal.hidden = false;
