@@ -119,8 +119,18 @@ function trackOutboundLinks() {
 function setStatus(message, type = "ok") { if (!dom.statusText) return; dom.statusText.textContent = `C:\\PLAY> ${message}${message.endsWith("_") ? "" : "_"}`; dom.statusText.className = type; }
 function handleExitStatus(err) { const isExit = err && (err.name === "ExitStatus" || (err.message && err.message.includes("ExitStatus"))); return !!(isExit && (err.status === 0 || !err.status)); }
 function showEmptyState(visible) { if (dom.emptyState) dom.emptyState.style.display = visible ? "" : "none"; }
-function hideLoading() { document.getElementById("loadingOverlay")?.remove(); }
+let _bootDismissTimer = null;
+function hideLoading() { if (_bootDismissTimer) { clearTimeout(_bootDismissTimer); _bootDismissTimer = null; } document.getElementById("loadingOverlay")?.remove(); }
 function showLoading(message) { hideLoading(); const overlay = document.createElement("div"); overlay.className = "loading-overlay"; overlay.id = "loadingOverlay"; overlay.innerHTML = '<div class="spinner"></div>'; const p = document.createElement("p"); p.textContent = message; overlay.appendChild(p); dom.playerShell.appendChild(overlay); }
+function showBootingOverlay() {
+  const overlay = document.getElementById("loadingOverlay");
+  if (!overlay) return;
+  const p = overlay.querySelector("p");
+  if (p) p.textContent = "Game booting… click to dismiss";
+  overlay.style.cursor = "pointer";
+  overlay.addEventListener("click", hideLoading, { once: true });
+  _bootDismissTimer = setTimeout(hideLoading, 12000);
+}
 function showGameCrashScreen(message) { const existing = document.getElementById("gameCrashOverlay"); if (existing) existing.remove(); const overlay = document.createElement("div"); overlay.id = "gameCrashOverlay"; overlay.className = "game-crash-overlay"; const box = document.createElement("div"); box.className = "crash-box"; const title = document.createElement("p"); title.className = "crash-title"; title.textContent = "⚠ GAME ERROR"; const msg = document.createElement("p"); msg.className = "crash-msg"; msg.textContent = message; const btn = document.createElement("button"); btn.className = "crash-dismiss ghost-btn"; btn.textContent = "Dismiss"; btn.addEventListener("click", () => overlay.remove()); box.append(title, msg, btn); overlay.appendChild(box); dom.playerShell?.appendChild(overlay); }
 function updateUI() { if (dom.stopBtn) dom.stopBtn.hidden = !state.isRunning; if (dom.saveBtn) dom.saveBtn.hidden = !state.isRunning; showEmptyState(!state.isRunning && !state.ci); }
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -220,7 +230,7 @@ async function startDos(bundleUrl) {
     if (!ci) throw new Error("Dos initialization returned null");
     state.ci = ci; state.isRunning = true; state.currentBundle = bundleUrl; updateUI();
     ci.events?.().onTerminate(() => stopCurrent().then(() => showEmptyState(true)));
-    hideLoading(); setStatus("System Ready - Drive A:", "ok"); applySoundSetting(); setTimeout(applySoundSetting, 500); setTimeout(applySoundSetting, 1500); setTimeout(applySoundSetting, 3000); setTimeout(applySoundSetting, 5000);
+    showBootingOverlay(); setStatus("System Ready - Drive A:", "ok"); applySoundSetting(); setTimeout(applySoundSetting, 500); setTimeout(applySoundSetting, 1500); setTimeout(applySoundSetting, 3000); setTimeout(applySoundSetting, 5000);
     trackEvent("game_start", { bundle_url: bundleUrl, method: state.objectUrl ? "file_upload" : "url" });
     return { ok: true };
   } catch (err) {
