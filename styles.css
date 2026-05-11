@@ -1117,3 +1117,245 @@ select:focus {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ── Player topline version tag ─────────────────────────────────────────── */
+.player-topline-ver {
+  font-size: 0.68rem;
+  color: var(--dos-grey);
+  opacity: 0.7;
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+
+/* ── Clickable DOS command in terminal ──────────────────────────────────── */
+.dos-cmd-btn {
+  background: none;
+  border: none;
+  color: var(--dos-cyan);
+  font-family: var(--font-mono);
+  font-size: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+.dos-cmd-btn:hover {
+  color: var(--dos-white);
+}
+
+/* ── File Browser Modal ─────────────────────────────────────────────────── */
+.file-browser-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background: #000014;
+  font-family: var(--font-mono);
+  color: var(--dos-grey);
+}
+
+.fb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 1rem;
+  background: var(--dos-blue);
+  color: var(--dos-cyan);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.fb-title {
+  text-shadow: 0 0 10px rgba(0, 168, 168, 0.4);
+}
+
+.fb-count {
+  color: var(--dos-grey);
+  font-size: 0.7rem;
+  flex: 1;
+  text-align: center;
+}
+
+.fb-close-hint {
+  background: none;
+  border: none;
+  color: var(--dos-grey);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  opacity: 0.8;
+  cursor: pointer;
+  padding: 0;
+}
+
+.fb-close-hint:hover {
+  color: var(--dos-white);
+  opacity: 1;
+}
+
+.fb-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 1rem;
+  background: #0a0a16;
+  border-bottom: 1px solid #1a1a2e;
+  flex-shrink: 0;
+}
+
+.fb-prompt {
+  color: var(--dos-white);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.fb-search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--dos-cyan);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  flex: 1;
+  caret-color: var(--dos-grey);
+}
+
+.fb-search-input::placeholder {
+  color: #444;
+}
+
+.fb-list-header {
+  display: grid;
+  grid-template-columns: 1fr 4rem 10rem 5rem;
+  padding: 0.22rem 1rem;
+  background: #0d0d1e;
+  border-bottom: 1px solid #1a1a2e;
+  font-size: 0.7rem;
+  color: var(--dos-cyan);
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.fb-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.15rem 0;
+  scroll-behavior: smooth;
+}
+
+.fb-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.fb-list::-webkit-scrollbar-track {
+  background: #0a0a16;
+}
+
+.fb-list::-webkit-scrollbar-thumb {
+  background: #1a1a3e;
+}
+
+.fb-list::-webkit-scrollbar-thumb:hover {
+  background: var(--dos-blue);
+}
+
+.fb-item {
+  display: grid;
+  grid-template-columns: 1fr 4rem 10rem 5rem;
+  padding: 0.22rem 1rem;
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: var(--dos-grey);
+  white-space: nowrap;
+  overflow: hidden;
+  user-select: none;
+}
+
+.fb-item:hover {
+  background: rgba(0, 0, 168, 0.4);
+  color: var(--dos-white);
+}
+
+.fb-item.fb-cursor {
+  background: var(--dos-blue);
+  color: var(--dos-white);
+  outline: none;
+}
+
+.fb-col-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 0.75rem;
+}
+
+.fb-col-year {
+  opacity: 0.7;
+}
+
+.fb-col-genre {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.8;
+  padding-right: 0.5rem;
+}
+
+.fb-col-status {
+  color: var(--dos-cyan);
+  font-size: 0.7rem;
+}
+
+.fb-item.fb-cursor .fb-col-status,
+.fb-item:hover .fb-col-status {
+  color: var(--dos-white);
+}
+
+.fb-footer {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  background: var(--dos-blue);
+  color: var(--dos-grey);
+  padding: 0.3rem 1rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.03em;
+  border-top: 1px solid #0050a8;
+  flex-shrink: 0;
+}
+
+.fb-cmdline {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 1rem;
+  background: #0a0a16;
+  border-top: 1px solid #1a1a2e;
+  font-size: 0.78rem;
+  flex-shrink: 0;
+}
+
+.fb-cmd-text {
+  color: var(--dos-cyan);
+  flex: 1;
+}
+
+@media (max-width: 600px) {
+  .fb-list-header,
+  .fb-item {
+    grid-template-columns: 1fr 4rem 5rem;
+  }
+
+  .fb-col-genre {
+    display: none;
+  }
+
+  .fb-footer {
+    gap: 1rem;
+    font-size: 0.6rem;
+    flex-wrap: wrap;
+  }
+}
