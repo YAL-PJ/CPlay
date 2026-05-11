@@ -552,6 +552,11 @@ select:focus {
   display: flex !important;
   align-items: center;
   justify-content: center;
+  cursor: none;
+}
+
+#dos-player canvas {
+  cursor: none;
 }
 
 #dos-player div {
