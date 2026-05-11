@@ -143,71 +143,76 @@
 
   <main class="layout">
     <section class="panel controls-panel">
-      <h1>Load &amp; Play</h1>
-      <p class="subtle">
-        Drop a <strong>.jsdos</strong> bundle or <strong>.zip</strong> to play locally. Nothing leaves your browser.
-      </p>
-
-      <label class="dropzone" id="dropzone">
-        <input id="bundleInput" type="file" accept=".jsdos,.zip,application/zip" />
-        <span class="drop-title">Drop .jsdos / .zip here</span>
-        <span class="drop-subtitle">or click to browse</span>
-      </label>
-
-      <div class="url-loader">
-        <label for="bundleUrl" class="section-title">Paste a URL</label>
-        <div class="url-row">
-          <input id="bundleUrl" type="url" placeholder="https://…/game.jsdos" />
-          <button id="loadUrlBtn" type="button" class="action-btn">Load</button>
-        </div>
-        <p class="small-note">
-          Direct links, GitHub repos, Google&nbsp;Drive / Dropbox / OneDrive share links all work.
+      <div class="controls-hdr">
+        <span>A:\CONTROLS</span>
+        <span class="controls-hdr-sub">LOAD &amp; PLAY</span>
+      </div>
+      <div class="controls-body">
+        <p class="subtle">
+          Drop a <strong>.jsdos</strong> bundle or <strong>.zip</strong> to play locally. Nothing leaves your browser.
         </p>
-      </div>
 
-      <div class="library-section">
-        <button id="openLibraryBtn" class="action-btn" type="button" style="width:100%">&#x1F4BE; Open Game Library</button>
-        <p class="small-note">Browse the A:\GAMES freeware &amp; shareware catalog.</p>
-      </div>
+        <label class="dropzone" id="dropzone">
+          <input id="bundleInput" type="file" accept=".jsdos,.zip,application/zip" />
+          <span class="drop-title">Drop .jsdos / .zip here</span>
+          <span class="drop-subtitle">or click to browse</span>
+        </label>
 
-      <div class="saves-section">
-        <p class="section-title">Saved Games</p>
-        <div id="savesList">
-          <p class="small-note">No saves yet. Run a game and hit Save.</p>
+        <div class="url-loader">
+          <label for="bundleUrl" class="section-title">Paste a URL</label>
+          <div class="url-row">
+            <input id="bundleUrl" type="url" placeholder="https://…/game.jsdos" />
+            <button id="loadUrlBtn" type="button" class="action-btn">Load</button>
+          </div>
+          <p class="small-note">
+            Direct links, GitHub repos, Google&nbsp;Drive / Dropbox / OneDrive share links all work.
+          </p>
         </div>
-      </div>
 
-      <details class="settings">
-        <summary>Emulator settings</summary>
-        <div class="settings-grid">
-          <label>
-            CPU cycles
-            <input id="cycles" type="number" min="500" max="50000" step="500" />
-          </label>
-          <label>
-            Memory (MB)
-            <input id="memsize" type="number" min="8" max="64" step="1" />
-          </label>
-          <label>
-            Sound
-            <select id="sound">
-              <option value="on">On</option>
-              <option value="off">Off</option>
-            </select>
-          </label>
-          <label>
-            Theme
-            <select id="themeTint">
-              <option value="amber">Amber</option>
-              <option value="green">Green</option>
-              <option value="ice">Ice</option>
-            </select>
-          </label>
+        <div class="library-section">
+          <button id="openLibraryBtn" class="action-btn" type="button" style="width:100%">&#x1F4BE; Open Game Library</button>
+          <p class="small-note">Browse the A:\GAMES freeware &amp; shareware catalog.</p>
         </div>
-        <p class="small-note">
-          Defaults suit most games. Some titles may need custom DOSBox configs.
-        </p>
-      </details>
+
+        <div class="saves-section">
+          <p class="section-title">Saved Games</p>
+          <div id="savesList">
+            <p class="small-note">No saves yet. Run a game and hit Save.</p>
+          </div>
+        </div>
+
+        <details class="settings">
+          <summary>Emulator settings</summary>
+          <div class="settings-grid">
+            <label>
+              CPU cycles
+              <input id="cycles" type="number" min="500" max="50000" step="500" />
+            </label>
+            <label>
+              Memory (MB)
+              <input id="memsize" type="number" min="8" max="64" step="1" />
+            </label>
+            <label>
+              Sound
+              <select id="sound">
+                <option value="on">On</option>
+                <option value="off">Off</option>
+              </select>
+            </label>
+            <label>
+              Theme
+              <select id="themeTint">
+                <option value="amber">Amber</option>
+                <option value="green">Green</option>
+                <option value="ice">Ice</option>
+              </select>
+            </label>
+          </div>
+          <p class="small-note">
+            Defaults suit most games. Some titles may need custom DOSBox configs.
+          </p>
+        </details>
+      </div>
     </section>
 
     <section class="panel player-panel">
@@ -289,6 +294,7 @@
       <input id="fbSearch" class="fb-search-input" type="text" placeholder="type to filter..." autocomplete="off" spellcheck="false" />
     </div>
     <div class="fb-list-header">
+      <span>#</span>
       <span>Name</span>
       <span>Year</span>
       <span>Genre</span>
