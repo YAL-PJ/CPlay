@@ -23,6 +23,8 @@ const dom = {
   closeLibraryBtn: document.getElementById("closeLibraryBtn"),
   featuredGameCards: document.getElementById("featuredGameCards"),
   featuredGamesTerminal: document.getElementById("featuredGamesTerminal"),
+  openFileBrowserBtn: document.getElementById("openFileBrowserBtn"),
+  fileBrowserModal: document.getElementById("fileBrowserModal"),
 };
 
 const settingsFields = {
@@ -383,6 +385,94 @@ async function loadFeaturedGames() {
   }
 }
 
+// ── File Browser ───────────────────────────────────────────────
+const fb = { games: [], filtered: [], cursor: 0 };
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+async function openFileBrowser() {
+  const modal = dom.fileBrowserModal;
+  if (!modal) return;
+  modal.hidden = false;
+  document.body.style.overflow = "hidden";
+  document.getElementById("fbSearch")?.focus();
+  if (!fb.games.length) await loadFbGames();
+  else renderFbList();
+  trackEvent("file_browser_open");
+}
+
+function closeFileBrowser() {
+  if (dom.fileBrowserModal) dom.fileBrowserModal.hidden = true;
+  document.body.style.overflow = "";
+}
+
+async function loadFbGames() {
+  try {
+    const resp = await fetch(LIBRARY_JSON_URL);
+    if (!resp.ok) throw new Error("Network error");
+    const data = await resp.json();
+    fb.games = Array.isArray(data) ? data.filter(g => g.downloadUrl) : [];
+    fb.filtered = [...fb.games];
+    fb.cursor = 0;
+    renderFbList();
+    updateFbCount();
+  } catch {
+    const list = document.getElementById("fbList");
+    if (list) list.innerHTML = '<div style="padding:1.5rem;text-align:center;color:#555">Error loading library. Check your connection.</div>';
+  }
+}
+
+function renderFbList() {
+  const list = document.getElementById("fbList");
+  if (!list) return;
+  if (!fb.filtered.length) {
+    list.innerHTML = '<div style="padding:1.5rem;text-align:center;color:#555">No files found.</div>';
+    return;
+  }
+  list.innerHTML = "";
+  fb.filtered.forEach((g, i) => {
+    const item = document.createElement("div");
+    item.className = "fb-item" + (i === fb.cursor ? " fb-cursor" : "");
+    item.setAttribute("role", "option");
+    item.setAttribute("aria-selected", i === fb.cursor);
+    item.innerHTML = `<span class="fb-col-name">${escapeHtml(g.title || "Unknown")}</span><span class="fb-col-year">${g.year || "????"}</span><span class="fb-col-genre">${escapeHtml(g.genre || "")}</span><span class="fb-col-status">&lt;PLAY&gt;</span>`;
+    item.addEventListener("click", () => { fb.cursor = i; playFbGame(fb.filtered[i]); });
+    item.addEventListener("mouseenter", () => {
+      fb.cursor = i;
+      list.querySelectorAll(".fb-cursor").forEach(el => el.classList.remove("fb-cursor"));
+      item.classList.add("fb-cursor");
+    });
+    list.appendChild(item);
+  });
+  list.querySelector(".fb-cursor")?.scrollIntoView({ block: "nearest" });
+}
+
+function updateFbCount() {
+  const count = document.getElementById("fbCount");
+  if (count) count.textContent = `${fb.filtered.length} file(s) — ENTER to run`;
+}
+
+function filterFb(query) {
+  const q = query.toLowerCase().trim();
+  fb.filtered = q
+    ? fb.games.filter(g => g.title?.toLowerCase().includes(q) || g.genre?.toLowerCase().includes(q))
+    : [...fb.games];
+  fb.cursor = 0;
+  renderFbList();
+  updateFbCount();
+  const cmd = document.getElementById("fbCmdText");
+  if (cmd) cmd.textContent = q ? `DIR /S *${q}*` : "";
+}
+
+function playFbGame(game) {
+  if (!game?.downloadUrl) return;
+  closeFileBrowser();
+  loadBundleFromUrl(game.downloadUrl);
+  trackEvent("file_browser_game_launch", { title: game.title });
+}
+
 function renderFeaturedGameCards(games) {
   if (!dom.featuredGameCards) return;
   dom.featuredGameCards.innerHTML = "";
@@ -427,6 +517,24 @@ function setupEventListeners() {
   dom.soundToggleFS?.addEventListener("click", toggleSound);
   dom.openLibraryBtn?.addEventListener("click", openLibrary);
   dom.closeLibraryBtn?.addEventListener("click", closeLibrary);
+  dom.openFileBrowserBtn?.addEventListener("click", openFileBrowser);
+  document.getElementById("fbCloseBtn")?.addEventListener("click", closeFileBrowser);
+  document.getElementById("fbSearch")?.addEventListener("input", e => filterFb(e.target.value));
+  dom.fileBrowserModal?.addEventListener("keydown", e => {
+    if (e.key === "Escape") { closeFileBrowser(); return; }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      fb.cursor = Math.min(fb.cursor + 1, fb.filtered.length - 1);
+      renderFbList();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      fb.cursor = Math.max(fb.cursor - 1, 0);
+      renderFbList();
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (fb.filtered[fb.cursor]) playFbGame(fb.filtered[fb.cursor]);
+    }
+  });
 
   // Drag-and-drop on the player area (DOS screen)
   const playerDrop = dom.playerShell;
@@ -451,10 +559,17 @@ function setupEventListeners() {
 
   // Space/Enter triggers js-dos play button; Escape closes library modal
   document.addEventListener("keydown", e => {
-    if (e.key === "Escape" && dom.libraryModal && !dom.libraryModal.hidden) {
-      e.preventDefault();
-      closeLibrary();
-      return;
+    if (e.key === "Escape") {
+      if (dom.fileBrowserModal && !dom.fileBrowserModal.hidden) {
+        e.preventDefault();
+        closeFileBrowser();
+        return;
+      }
+      if (dom.libraryModal && !dom.libraryModal.hidden) {
+        e.preventDefault();
+        closeLibrary();
+        return;
+      }
     }
     if (e.key !== " " && e.key !== "Enter") return;
     const tag = document.activeElement?.tagName;
