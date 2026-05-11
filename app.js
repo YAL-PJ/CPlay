@@ -231,6 +231,7 @@ async function startDos(bundleUrl) {
     state.ci = ci; state.isRunning = true; state.currentBundle = bundleUrl; updateUI();
     ci.events?.().onTerminate(() => stopCurrent().then(() => showEmptyState(true)));
     showBootingOverlay(); setStatus("System Ready - Drive A:", "ok"); applySoundSetting(); setTimeout(applySoundSetting, 500); setTimeout(applySoundSetting, 1500); setTimeout(applySoundSetting, 3000); setTimeout(applySoundSetting, 5000);
+    dom.playerShell?.requestFullscreen().catch(() => {});
     trackEvent("game_start", { bundle_url: bundleUrl, method: state.objectUrl ? "file_upload" : "url" });
     return { ok: true };
   } catch (err) {
