@@ -25,6 +25,11 @@ const dom = {
   featuredGamesTerminal: document.getElementById("featuredGamesTerminal"),
   openFileBrowserBtn: document.getElementById("openFileBrowserBtn"),
   fileBrowserModal: document.getElementById("fileBrowserModal"),
+  inlineBrowserView: document.getElementById("inlineBrowserView"),
+  openDosTerminalBtn: document.getElementById("openDosTerminalBtn"),
+  dosTerminalInteractive: document.getElementById("dosTerminalInteractive"),
+  ditOutput: document.getElementById("ditOutput"),
+  ditInput: document.getElementById("ditInput"),
 };
 
 const settingsFields = {
@@ -416,22 +421,30 @@ async function loadFbGames() {
     fb.games = Array.isArray(data) ? data.filter(g => g.downloadUrl) : [];
     fb.filtered = [...fb.games];
     fb.cursor = 0;
-    renderFbList();
-    updateFbCount();
+    if (dom.fileBrowserModal && !dom.fileBrowserModal.hidden) {
+      renderFbList();
+      updateFbCount();
+    }
+    if (dom.inlineBrowserView && !dom.inlineBrowserView.hidden) {
+      renderIbList();
+      updateIbCount();
+    }
   } catch {
     const list = document.getElementById("fbList");
     if (list) list.innerHTML = '<div style="padding:1.5rem 1rem"><p class="dos-line" style="color:var(--err)">Bad command or file name</p><p class="dos-line dos-muted">Error: Library connection failed</p><p class="dos-line dos-muted">Check your internet connection and try again</p></div>';
+    const ibList = document.getElementById("ibList");
+    if (ibList) ibList.innerHTML = '<div style="padding:1.5rem 1rem"><p class="dos-line" style="color:var(--err)">Bad command or file name</p></div>';
   }
 }
 
-function renderFbList() {
-  const list = document.getElementById("fbList");
-  if (!list) return;
+// Shared render helper — writes fb.filtered into any list element
+function renderGameList(listEl) {
+  if (!listEl) return;
   if (!fb.filtered.length) {
-    list.innerHTML = '<div style="padding:1.5rem;text-align:center;color:#555">No files found.</div>';
+    listEl.innerHTML = '<div style="padding:1.5rem;text-align:center;color:#555">No files found.</div>';
     return;
   }
-  list.innerHTML = "";
+  listEl.innerHTML = "";
   fb.filtered.forEach((g, i) => {
     const item = document.createElement("div");
     item.className = "fb-item" + (i === fb.cursor ? " fb-cursor" : "");
@@ -441,36 +454,259 @@ function renderFbList() {
     item.addEventListener("click", () => { fb.cursor = i; playFbGame(fb.filtered[i]); });
     item.addEventListener("mouseenter", () => {
       fb.cursor = i;
-      list.querySelectorAll(".fb-cursor").forEach(el => el.classList.remove("fb-cursor"));
+      listEl.querySelectorAll(".fb-cursor").forEach(el => el.classList.remove("fb-cursor"));
       item.classList.add("fb-cursor");
     });
-    list.appendChild(item);
+    listEl.appendChild(item);
   });
-  list.querySelector(".fb-cursor")?.scrollIntoView({ block: "nearest" });
+  listEl.querySelector(".fb-cursor")?.scrollIntoView({ block: "nearest" });
 }
 
-function updateFbCount() {
-  const count = document.getElementById("fbCount");
-  if (count) count.textContent = `${fb.filtered.length} file(s) — ENTER to run`;
-}
+function renderFbList() { renderGameList(document.getElementById("fbList")); }
+function renderIbList() { renderGameList(document.getElementById("ibList")); }
 
-function filterFb(query) {
+function updateGameCount(countId) {
+  const el = document.getElementById(countId);
+  if (el) el.textContent = `${fb.filtered.length} file(s) — ENTER to run`;
+}
+function updateFbCount() { updateGameCount("fbCount"); }
+function updateIbCount() { updateGameCount("ibCount"); }
+
+function filterGames(query, renderFn, countFn, cmdId) {
   const q = query.toLowerCase().trim();
   fb.filtered = q
     ? fb.games.filter(g => g.title?.toLowerCase().includes(q) || g.genre?.toLowerCase().includes(q))
     : [...fb.games];
   fb.cursor = 0;
-  renderFbList();
-  updateFbCount();
-  const cmd = document.getElementById("fbCmdText");
+  renderFn();
+  countFn();
+  const cmd = document.getElementById(cmdId);
   if (cmd) cmd.textContent = q ? `DIR /S *${q}*` : "";
 }
+function filterFb(query) { filterGames(query, renderFbList, updateFbCount, "fbCmdText"); }
+function filterIb(query) { filterGames(query, renderIbList, updateIbCount, "ibCmdText"); }
 
 function playFbGame(game) {
   if (!game?.downloadUrl) return;
   closeFileBrowser();
+  closeInlineBrowser();
   loadBundleFromUrl(game.downloadUrl);
   trackEvent("file_browser_game_launch", { title: game.title });
+}
+
+// ── Inline Browser (DIR /B visual) ────────────────────────────
+async function openInlineBrowser() {
+  if (!dom.inlineBrowserView) { openFileBrowser(); return; }
+  showEmptyState(false);
+  dom.inlineBrowserView.hidden = false;
+  document.getElementById("ibSearch")?.focus();
+  if (!fb.games.length) await loadFbGames();
+  else { fb.filtered = [...fb.games]; fb.cursor = 0; renderIbList(); updateIbCount(); }
+  trackEvent("inline_browser_open");
+}
+
+function closeInlineBrowser() {
+  if (!dom.inlineBrowserView || dom.inlineBrowserView.hidden) return;
+  dom.inlineBrowserView.hidden = true;
+  if (!state.isRunning && !state.ci) showEmptyState(true);
+  const search = document.getElementById("ibSearch");
+  if (search) search.value = "";
+  const cmd = document.getElementById("ibCmdText");
+  if (cmd) cmd.textContent = "";
+  fb.filtered = [...fb.games];
+  fb.cursor = 0;
+}
+
+// ── Interactive DOS Terminal ───────────────────────────────────
+const dit = { history: [], histIdx: -1, currentDir: "C:\\GAMES" };
+
+function ditHash(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) h = Math.imul(h, 31) + str.charCodeAt(i) | 0;
+  return Math.abs(h);
+}
+
+function ditFakeInfo(g) {
+  const h = ditHash(g.title || "");
+  const size = (h % 11_500_000) + 524_288; // ~512 KB – 12 MB
+  const y = parseInt(g.year) || 1993;
+  const mo = String((h % 12) + 1).padStart(2, "0");
+  const dy = String((h % 28) + 1).padStart(2, "0");
+  const hr = String(h % 24).padStart(2, "0");
+  const mn = String((h >>> 4) % 60).padStart(2, "0");
+  return { size, date: `${mo}/${dy}/${y}`, time: `${hr}:${mn}` };
+}
+
+function ditAppend(html) {
+  const out = dom.ditOutput;
+  if (!out) return;
+  const wrap = document.createElement("div");
+  wrap.innerHTML = html;
+  out.appendChild(wrap);
+  out.scrollTop = out.scrollHeight;
+}
+
+function ditLine(text, cls = "dit-out") {
+  return `<p class="dit-line ${cls}">${escapeHtml(text)}</p>`;
+}
+
+async function openDosTerminal() {
+  if (!dom.dosTerminalInteractive) return;
+  showEmptyState(false);
+  dom.dosTerminalInteractive.hidden = false;
+  if (!fb.games.length) await loadFbGames();
+  if (dom.ditOutput && dom.ditOutput.children.length === 0) {
+    ditAppend(
+      ditLine("Microsoft(R) MS-DOS(R) Version 6.22") +
+      ditLine("             (C)Copyright Microsoft Corp 1981-1994.", "dit-out dit-dim") +
+      ditLine("") +
+      `<p class="dit-line dit-out dit-dim">Type <span class="dit-key">HELP</span> for available commands. Click a filename to launch the game.</p>` +
+      ditLine("")
+    );
+  }
+  dom.ditInput?.focus();
+  trackEvent("dos_terminal_open");
+}
+
+function closeDosTerminal() {
+  if (!dom.dosTerminalInteractive || dom.dosTerminalInteractive.hidden) return;
+  dom.dosTerminalInteractive.hidden = true;
+  if (!state.isRunning && !state.ci) showEmptyState(true);
+}
+
+async function executeDosCommand(raw) {
+  const cmd = raw.trim();
+  const up = cmd.toUpperCase().replace(/\s+/g, " ");
+
+  ditAppend(`<p class="dit-line dit-echo">${escapeHtml(dit.currentDir)}&gt; ${escapeHtml(cmd)}</p>`);
+  if (!cmd) return;
+
+  if (dit.history[0] !== cmd) dit.history.unshift(cmd);
+  if (dit.history.length > 50) dit.history.pop();
+  dit.histIdx = -1;
+
+  if (up === "CLS") { if (dom.ditOutput) dom.ditOutput.innerHTML = ""; return; }
+  if (up === "VER") { ditAppend(ditLine("") + ditLine("MS-DOS Version 6.22") + ditLine("")); return; }
+  if (up === "CD" || up === "CD." || up === `CD ${dit.currentDir}`) { ditAppend(ditLine(dit.currentDir)); return; }
+
+  if (up === "HELP") {
+    ditAppend(
+      ditLine("") +
+      ditLine("Available commands:") +
+      ditLine("  DIR          Full directory listing with sizes and dates") +
+      ditLine("  DIR /B       Bare listing (filenames only)") +
+      ditLine("  DIR /W       Wide listing") +
+      ditLine("  CLS          Clear screen") +
+      ditLine("  VER          Show DOS version") +
+      ditLine("  CD           Show current directory") +
+      ditLine("  HELP         Show this help") +
+      ditLine("  <filename>   Type a .JSDOS name to launch the game") +
+      ditLine("")
+    );
+    return;
+  }
+
+  // DIR — full listing with sizes and dates
+  if (up === "DIR" || up === "DIR /A" || up === "DIR /O" || up === "DIR /ON") {
+    if (!fb.games.length) { ditAppend(ditLine(" Loading...", "dit-out dit-dim")); await loadFbGames(); }
+    const out = dom.ditOutput;
+    if (!out) return;
+    const hdr = document.createElement("div");
+    hdr.innerHTML =
+      ditLine("") +
+      ditLine(" Volume in drive C is PLAY") +
+      ditLine(" Volume Serial Number is CAFE-BABE") +
+      ditLine("") +
+      ditLine(` Directory of ${dit.currentDir}`) +
+      ditLine("");
+    out.appendChild(hdr);
+    let total = 0;
+    const frag = document.createDocumentFragment();
+    fb.games.forEach(g => {
+      const { size, date, time } = ditFakeInfo(g);
+      total += size;
+      const fname = ((g.title || "UNKNOWN") + ".JSDOS").toUpperCase();
+      const sizeStr = size.toLocaleString("en-US").padStart(15);
+      const row = document.createElement("p");
+      row.className = "dit-file-row";
+      row.innerHTML =
+        `<span class="dit-fdate">${date}  ${time}  </span>` +
+        `<span class="dit-fsize">${sizeStr} </span>` +
+        `<span class="dit-fname">${escapeHtml(fname)}</span>`;
+      row.addEventListener("click", () => {
+        if (g.downloadUrl) { closeDosTerminal(); loadBundleFromUrl(g.downloadUrl); trackEvent("dos_terminal_game_launch", { title: g.title }); }
+      });
+      frag.appendChild(row);
+    });
+    out.appendChild(frag);
+    const ftr = document.createElement("div");
+    ftr.innerHTML =
+      ditLine("") +
+      ditLine(`         ${String(fb.games.length).padStart(4)} File(s)  ${total.toLocaleString("en-US")} bytes`) +
+      ditLine(`            0 Dir(s)   638,976,000 bytes free`) +
+      ditLine("");
+    out.appendChild(ftr);
+    out.scrollTop = out.scrollHeight;
+    return;
+  }
+
+  // DIR /B — bare filenames only
+  if (up === "DIR /B") {
+    if (!fb.games.length) await loadFbGames();
+    const out = dom.ditOutput;
+    if (!out) return;
+    const block = document.createElement("div");
+    block.innerHTML = ditLine("");
+    out.appendChild(block);
+    const frag = document.createDocumentFragment();
+    fb.games.forEach(g => {
+      const fname = ((g.title || "UNKNOWN") + ".JSDOS").toUpperCase();
+      const row = document.createElement("p");
+      row.className = "dit-file-row";
+      row.innerHTML = `<span class="dit-fname">${escapeHtml(fname)}</span>`;
+      row.addEventListener("click", () => {
+        if (g.downloadUrl) { closeDosTerminal(); loadBundleFromUrl(g.downloadUrl); trackEvent("dos_terminal_game_launch", { title: g.title }); }
+      });
+      frag.appendChild(row);
+    });
+    out.appendChild(frag);
+    const end = document.createElement("div");
+    end.innerHTML = ditLine("");
+    out.appendChild(end);
+    out.scrollTop = out.scrollHeight;
+    return;
+  }
+
+  // DIR /W — wide format (4 columns)
+  if (up === "DIR /W") {
+    if (!fb.games.length) await loadFbGames();
+    const names = fb.games.map(g => ((g.title || "UNKNOWN") + ".JSDOS").toUpperCase());
+    let html = ditLine("") + ditLine(` Directory of ${dit.currentDir}`) + ditLine("");
+    const COL = 4, W = 20;
+    for (let i = 0; i < names.length; i += COL) {
+      const row = names.slice(i, i + COL).map(n => n.substring(0, W - 1).padEnd(W)).join("");
+      html += ditLine(` ${row}`);
+    }
+    html += ditLine("") + ditLine(`         ${fb.games.length} File(s)`) + ditLine("");
+    ditAppend(html);
+    return;
+  }
+
+  // Try matching a game filename typed directly
+  if (fb.games.length) {
+    const stripped = cmd.replace(/\.jsdos$/i, "").toLowerCase();
+    const match = fb.games.find(g =>
+      g.title?.toLowerCase() === stripped ||
+      (g.title?.toLowerCase() + ".jsdos") === cmd.toLowerCase()
+    );
+    if (match) {
+      ditAppend(ditLine(`Starting ${match.title}...`));
+      setTimeout(() => { closeDosTerminal(); loadBundleFromUrl(match.downloadUrl); }, 600);
+      return;
+    }
+  }
+
+  ditAppend(ditLine("") + ditLine("Bad command or file name", "dit-err") + ditLine(""));
 }
 
 function renderFeaturedGameCards(games) {
@@ -517,9 +753,42 @@ function setupEventListeners() {
   dom.soundToggleFS?.addEventListener("click", toggleSound);
   dom.openLibraryBtn?.addEventListener("click", openLibrary);
   dom.closeLibraryBtn?.addEventListener("click", closeLibrary);
-  dom.openFileBrowserBtn?.addEventListener("click", openFileBrowser);
+  dom.openFileBrowserBtn?.addEventListener("click", openInlineBrowser);
+  dom.openDosTerminalBtn?.addEventListener("click", openDosTerminal);
   document.getElementById("fbCloseBtn")?.addEventListener("click", closeFileBrowser);
   document.getElementById("fbSearch")?.addEventListener("input", e => filterFb(e.target.value));
+  document.getElementById("ibBackBtn")?.addEventListener("click", closeInlineBrowser);
+  document.getElementById("ibSearch")?.addEventListener("input", e => filterIb(e.target.value));
+  document.getElementById("ditCloseBtn")?.addEventListener("click", closeDosTerminal);
+
+  // DOS terminal keyboard input
+  if (dom.ditInput) {
+    dom.ditInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        const v = dom.ditInput.value;
+        dom.ditInput.value = "";
+        executeDosCommand(v);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (dit.history.length) {
+          dit.histIdx = Math.min(dit.histIdx + 1, dit.history.length - 1);
+          dom.ditInput.value = dit.history[dit.histIdx] || "";
+        }
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        dit.histIdx = Math.max(dit.histIdx - 1, -1);
+        dom.ditInput.value = dit.histIdx >= 0 ? dit.history[dit.histIdx] : "";
+      }
+    });
+  }
+
+  dom.inlineBrowserView?.addEventListener("keydown", e => {
+    if (e.key === "Escape") { closeInlineBrowser(); return; }
+    if (e.key === "ArrowDown") { e.preventDefault(); fb.cursor = Math.min(fb.cursor + 1, fb.filtered.length - 1); renderIbList(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); fb.cursor = Math.max(fb.cursor - 1, 0); renderIbList(); }
+    else if (e.key === "Enter") { e.preventDefault(); if (fb.filtered[fb.cursor]) playFbGame(fb.filtered[fb.cursor]); }
+  });
+
   dom.fileBrowserModal?.addEventListener("keydown", e => {
     if (e.key === "Escape") { closeFileBrowser(); return; }
     if (e.key === "ArrowDown") {
@@ -543,6 +812,7 @@ function setupEventListeners() {
     playerDrop.addEventListener("dragleave", e => { if (!playerDrop.contains(e.relatedTarget)) playerDrop.classList.remove("player-dragging"); });
     playerDrop.addEventListener("drop", e => { e.preventDefault(); playerDrop.classList.remove("player-dragging"); loadUserBundle(e.dataTransfer.files[0]); });
   }
+
   Object.values(settingsFields).forEach(f => f?.addEventListener("change", () => { persistSettings(); applySoundSetting(); syncSoundIndicator(); trackEvent("settings_change", { cycles: settingsFields.cycles.value, memsize: settingsFields.memsize.value, sound: settingsFields.sound.value, theme: settingsFields.themeTint.value }); }));
 
   // Library postMessage bridge
@@ -557,19 +827,13 @@ function setupEventListeners() {
     }
   });
 
-  // Space/Enter triggers js-dos play button; Escape closes library modal
+  // Space/Enter triggers js-dos play button; Escape closes overlays in priority order
   document.addEventListener("keydown", e => {
     if (e.key === "Escape") {
-      if (dom.fileBrowserModal && !dom.fileBrowserModal.hidden) {
-        e.preventDefault();
-        closeFileBrowser();
-        return;
-      }
-      if (dom.libraryModal && !dom.libraryModal.hidden) {
-        e.preventDefault();
-        closeLibrary();
-        return;
-      }
+      if (dom.dosTerminalInteractive && !dom.dosTerminalInteractive.hidden) { e.preventDefault(); closeDosTerminal(); return; }
+      if (dom.inlineBrowserView && !dom.inlineBrowserView.hidden) { e.preventDefault(); closeInlineBrowser(); return; }
+      if (dom.fileBrowserModal && !dom.fileBrowserModal.hidden) { e.preventDefault(); closeFileBrowser(); return; }
+      if (dom.libraryModal && !dom.libraryModal.hidden) { e.preventDefault(); closeLibrary(); return; }
     }
     if (e.key !== " " && e.key !== "Enter") return;
     const tag = document.activeElement?.tagName;
@@ -595,7 +859,7 @@ window.addEventListener("unhandledrejection", event => {
   const isExit = err && (err.name === "ExitStatus" || (err.message && err.message.includes("ExitStatus")));
   if (!isExit) return;
   event.preventDefault();
-  if (handleExitStatus(err)) return; // exit code 0 — clean exit, nothing to show
+  if (handleExitStatus(err)) return;
   const code = err?.status ?? "?";
   stopCurrent().then(() => {
     setStatus(`Game crashed (exit code ${code})`, "error");
@@ -618,7 +882,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Load featured games from library into boot screen
   loadFeaturedGames();
 
-  // auto-launch if ?bundle= parameter is provided (from A:\GAMES library)
+  // auto-launch if ?bundle= parameter is provided (from A:\\GAMES library)
   const urlParams = new URLSearchParams(window.location.search);
   const bundleParam = urlParams.get("bundle");
   if (bundleParam) {
