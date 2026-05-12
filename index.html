@@ -22,7 +22,6 @@
   <meta name="keywords" content="DOS games, play DOS games online, DOS emulator, browser DOS, retro games, classic PC games, free DOS games, js-dos, online DOS player, freeware DOS games, shareware games" />
   <meta name="author" content="C:\PLAY" />
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-  <!-- Google Search Console verification: replace YOUR_CODE with your actual code -->
   <meta name="google-site-verification" content="YOUR_CODE" />
   <link rel="canonical" href="https://playdosgames.xyz/" />
   <meta name="theme-color" content="#1a1a2e" />
@@ -31,7 +30,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="C:\PLAY" />
 
-  <!-- Open Graph / Social sharing -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="C:\PLAY — Play DOS Games in Your Browser" />
   <meta property="og:description" content="Free online DOS emulator. Play classic DOS games instantly — no download, no install. Drag-and-drop your own games or browse the curated freeware library." />
@@ -39,13 +37,11 @@
   <meta property="og:image" content="https://playdosgames.xyz/assets/og-preview.png" />
   <meta property="og:site_name" content="C:\PLAY" />
 
-  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="C:\PLAY — Play DOS Games in Your Browser" />
   <meta name="twitter:description" content="Free online DOS emulator. Play classic DOS games instantly in your browser." />
   <meta name="twitter:image" content="https://playdosgames.xyz/assets/og-preview.png" />
 
-  <!-- Structured Data -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -237,7 +233,7 @@
         <div id="emptyState" class="empty-state">
           <div class="dos-boot-screen">
             <div class="dos-body">
-              <div class="dos-terminal">
+              <div class="dos-terminal" id="dosTerminal">
                 <p class="dos-line"><span class="dos-prompt">C:\&gt;</span> CD GAMES</p>
                 <p class="dos-line"><span class="dos-prompt">C:\GAMES&gt;</span> <button id="openFileBrowserBtn" class="dos-cmd-btn" title="Browse all games in the library">DIR /B</button></p>
                 <p class="dos-line dos-muted">&nbsp;</p>
@@ -246,8 +242,15 @@
                 <p class="dos-line dos-muted">&nbsp;</p>
                 <div id="featuredGamesTerminal"><p class="dos-line dos-muted"> &lt;Loading library...&gt;</p></div>
                 <p class="dos-line">&nbsp;</p>
-                <p class="dos-line"><span class="dos-prompt">C:\GAMES&gt;</span> <span class="dos-cursor">_</span></p>
-                <p class="dos-line dos-muted" style="margin-top:0.4rem;font-size:0.72rem"> &uarr; click <span style="color:#00a8a8">DIR /B</span> to browse all files</p>
+                <!-- Typeable prompt line -->
+                <p class="dos-line terminal-input-line">
+                  <span class="dos-prompt">C:\GAMES&gt;</span>
+                  <input id="terminalInput" class="terminal-input" type="text"
+                    placeholder="DIR /B" autocomplete="off" spellcheck="false" />
+                </p>
+                <p class="dos-line dos-muted" style="margin-top:0.4rem;font-size:0.72rem">
+                  type <span style="color:#00a8a8">DIR /B</span> or a game name and press <span style="color:#00a8a8">Enter</span> &nbsp;&mdash;&nbsp; or click <span style="color:#00a8a8">DIR /B</span> above
+                </p>
               </div>
               <div id="featuredGameCards" class="featured-game-cards" hidden></div>
               <div class="dos-dropzone-area" id="playerDropzone">
@@ -270,7 +273,7 @@
           </div>
         </div>
 
-        <!-- Inline File Browser: opens in-place when DIR /B is clicked -->
+        <!-- Inline File Browser: opens in-place when DIR /B is run -->
         <div id="inlineBrowserView" class="inline-browser" hidden>
           <div class="fb-header">
             <span class="fb-title">C:\GAMES</span>
