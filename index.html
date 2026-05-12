@@ -269,6 +269,39 @@
             </div>
           </div>
         </div>
+
+        <!-- Inline File Browser: opens in-place when DIR /B is clicked -->
+        <div id="inlineBrowserView" class="inline-browser" hidden>
+          <div class="fb-header">
+            <span class="fb-title">C:\GAMES</span>
+            <span id="ibCount" class="fb-count">Loading...</span>
+            <button id="ibBackBtn" class="fb-close-hint" type="button">[ESC] CD..</button>
+          </div>
+          <div class="fb-search-bar">
+            <span class="fb-prompt">C:\GAMES&gt;</span>
+            <input id="ibSearch" class="fb-search-input" type="text" placeholder="type to filter..." autocomplete="off" spellcheck="false" />
+            <span id="ibCmdText" class="fb-cmd-text"></span>
+          </div>
+          <div class="fb-list-header">
+            <span>#</span>
+            <span>Name</span>
+            <span>Year</span>
+            <span>Genre</span>
+            <span>Status</span>
+          </div>
+          <div class="fb-list" id="ibList" role="listbox" tabindex="0" aria-label="Games directory listing"></div>
+          <div class="fb-footer">
+            <span>[&#x2191;&#x2193;] Navigate</span>
+            <span>[Enter] Run</span>
+            <span>[Type] Search</span>
+            <span>[Esc] CD..</span>
+          </div>
+          <div class="fb-cmdline">
+            <span class="fb-prompt">C:\GAMES&gt;</span>
+            <span class="dos-cursor">_</span>
+          </div>
+        </div>
+
       </div>
     </section>
   </main>
