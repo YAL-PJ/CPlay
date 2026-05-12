@@ -1436,3 +1436,19 @@ select:focus {
     flex-wrap: wrap;
   }
 }
+
+/* ── Inline File Browser (embedded in main player screen) ───────────────── */
+.inline-browser {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  background: #000014;
+  font-family: var(--font-mono);
+  color: var(--dos-grey);
+}
+
+.inline-browser[hidden] {
+  display: none;
+}
