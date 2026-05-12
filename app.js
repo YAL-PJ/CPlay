@@ -28,6 +28,8 @@ const dom = {
   inlineBrowserView: document.getElementById("inlineBrowserView"),
   openDosTerminalBtn: document.getElementById("openDosTerminalBtn"),
   dosTerminalInteractive: document.getElementById("dosTerminalInteractive"),
+  ditOutput: document.getElementById("ditOutput"),
+  ditInput: document.getElementById("ditInput"),
 };
 
 const settingsFields = {
@@ -419,8 +421,10 @@ async function loadFbGames() {
     fb.games = Array.isArray(data) ? data.filter(g => g.downloadUrl) : [];
     fb.filtered = [...fb.games];
     fb.cursor = 0;
-    renderFbList();
-    updateFbCount();
+    if (dom.fileBrowserModal && !dom.fileBrowserModal.hidden) {
+      renderFbList();
+      updateFbCount();
+    }
     if (dom.inlineBrowserView && !dom.inlineBrowserView.hidden) {
       renderIbList();
       updateIbCount();
@@ -529,12 +533,12 @@ function ditFakeInfo(g) {
   const mo = String((h % 12) + 1).padStart(2, "0");
   const dy = String((h % 28) + 1).padStart(2, "0");
   const hr = String(h % 24).padStart(2, "0");
-  const mn = String((h >> 4) % 60).padStart(2, "0");
+  const mn = String((h >>> 4) % 60).padStart(2, "0");
   return { size, date: `${mo}/${dy}/${y}`, time: `${hr}:${mn}` };
 }
 
 function ditAppend(html) {
-  const out = document.getElementById("ditOutput");
+  const out = dom.ditOutput;
   if (!out) return;
   const wrap = document.createElement("div");
   wrap.innerHTML = html;
@@ -543,7 +547,7 @@ function ditAppend(html) {
 }
 
 function ditLine(text, cls = "dit-out") {
-  return `<p class="${cls}">${escapeHtml(text)}</p>`;
+  return `<p class="dit-line ${cls}">${escapeHtml(text)}</p>`;
 }
 
 async function openDosTerminal() {
@@ -551,18 +555,16 @@ async function openDosTerminal() {
   showEmptyState(false);
   dom.dosTerminalInteractive.hidden = false;
   if (!fb.games.length) await loadFbGames();
-  // Print welcome banner once
-  const out = document.getElementById("ditOutput");
-  if (out && out.children.length === 0) {
+  if (dom.ditOutput && dom.ditOutput.children.length === 0) {
     ditAppend(
-      `<p class="dit-out">Microsoft(R) MS-DOS(R) Version 6.22</p>` +
-      `<p class="dit-out dit-dim">             (C)Copyright Microsoft Corp 1981-1994.</p>` +
-      `<p class="dit-out">&nbsp;</p>` +
-      `<p class="dit-out dit-dim">Type <span style="color:var(--dos-cyan)">HELP</span> for available commands. Click a filename to launch the game.</p>` +
-      `<p class="dit-out">&nbsp;</p>`
+      ditLine("Microsoft(R) MS-DOS(R) Version 6.22") +
+      ditLine("             (C)Copyright Microsoft Corp 1981-1994.", "dit-out dit-dim") +
+      ditLine("") +
+      `<p class="dit-line dit-out dit-dim">Type <span class="dit-key">HELP</span> for available commands. Click a filename to launch the game.</p>` +
+      ditLine("")
     );
   }
-  document.getElementById("ditInput")?.focus();
+  dom.ditInput?.focus();
   trackEvent("dos_terminal_open");
 }
 
@@ -576,14 +578,14 @@ async function executeDosCommand(raw) {
   const cmd = raw.trim();
   const up = cmd.toUpperCase().replace(/\s+/g, " ");
 
-  ditAppend(`<p class="dit-echo">${escapeHtml(dit.currentDir)}&gt; ${escapeHtml(cmd)}</p>`);
+  ditAppend(`<p class="dit-line dit-echo">${escapeHtml(dit.currentDir)}&gt; ${escapeHtml(cmd)}</p>`);
   if (!cmd) return;
 
   if (dit.history[0] !== cmd) dit.history.unshift(cmd);
   if (dit.history.length > 50) dit.history.pop();
   dit.histIdx = -1;
 
-  if (up === "CLS") { const o = document.getElementById("ditOutput"); if (o) o.innerHTML = ""; return; }
+  if (up === "CLS") { if (dom.ditOutput) dom.ditOutput.innerHTML = ""; return; }
   if (up === "VER") { ditAppend(ditLine("") + ditLine("MS-DOS Version 6.22") + ditLine("")); return; }
   if (up === "CD" || up === "CD." || up === `CD ${dit.currentDir}`) { ditAppend(ditLine(dit.currentDir)); return; }
 
@@ -607,17 +609,19 @@ async function executeDosCommand(raw) {
   // DIR — full listing with sizes and dates
   if (up === "DIR" || up === "DIR /A" || up === "DIR /O" || up === "DIR /ON") {
     if (!fb.games.length) { ditAppend(ditLine(" Loading...", "dit-out dit-dim")); await loadFbGames(); }
-    const out = document.getElementById("ditOutput");
+    const out = dom.ditOutput;
+    if (!out) return;
     const hdr = document.createElement("div");
     hdr.innerHTML =
       ditLine("") +
-      `<p class="dit-out"> Volume in drive C is PLAY</p>` +
-      `<p class="dit-out"> Volume Serial Number is CAFE-BABE</p>` +
+      ditLine(" Volume in drive C is PLAY") +
+      ditLine(" Volume Serial Number is CAFE-BABE") +
       ditLine("") +
-      `<p class="dit-out"> Directory of ${escapeHtml(dit.currentDir)}</p>` +
+      ditLine(` Directory of ${dit.currentDir}`) +
       ditLine("");
     out.appendChild(hdr);
     let total = 0;
+    const frag = document.createDocumentFragment();
     fb.games.forEach(g => {
       const { size, date, time } = ditFakeInfo(g);
       total += size;
@@ -632,8 +636,9 @@ async function executeDosCommand(raw) {
       row.addEventListener("click", () => {
         if (g.downloadUrl) { closeDosTerminal(); loadBundleFromUrl(g.downloadUrl); trackEvent("dos_terminal_game_launch", { title: g.title }); }
       });
-      out.appendChild(row);
+      frag.appendChild(row);
     });
+    out.appendChild(frag);
     const ftr = document.createElement("div");
     ftr.innerHTML =
       ditLine("") +
@@ -648,10 +653,12 @@ async function executeDosCommand(raw) {
   // DIR /B — bare filenames only
   if (up === "DIR /B") {
     if (!fb.games.length) await loadFbGames();
-    const out = document.getElementById("ditOutput");
+    const out = dom.ditOutput;
+    if (!out) return;
     const block = document.createElement("div");
     block.innerHTML = ditLine("");
     out.appendChild(block);
+    const frag = document.createDocumentFragment();
     fb.games.forEach(g => {
       const fname = ((g.title || "UNKNOWN") + ".JSDOS").toUpperCase();
       const row = document.createElement("p");
@@ -660,8 +667,9 @@ async function executeDosCommand(raw) {
       row.addEventListener("click", () => {
         if (g.downloadUrl) { closeDosTerminal(); loadBundleFromUrl(g.downloadUrl); trackEvent("dos_terminal_game_launch", { title: g.title }); }
       });
-      out.appendChild(row);
+      frag.appendChild(row);
     });
+    out.appendChild(frag);
     const end = document.createElement("div");
     end.innerHTML = ditLine("");
     out.appendChild(end);
@@ -677,7 +685,7 @@ async function executeDosCommand(raw) {
     const COL = 4, W = 20;
     for (let i = 0; i < names.length; i += COL) {
       const row = names.slice(i, i + COL).map(n => n.substring(0, W - 1).padEnd(W)).join("");
-      html += `<p class="dit-out"> ${escapeHtml(row)}</p>`;
+      html += ditLine(` ${row}`);
     }
     html += ditLine("") + ditLine(`         ${fb.games.length} File(s)`) + ditLine("");
     ditAppend(html);
@@ -754,23 +762,22 @@ function setupEventListeners() {
   document.getElementById("ditCloseBtn")?.addEventListener("click", closeDosTerminal);
 
   // DOS terminal keyboard input
-  const ditInput = document.getElementById("ditInput");
-  if (ditInput) {
-    ditInput.addEventListener("keydown", e => {
+  if (dom.ditInput) {
+    dom.ditInput.addEventListener("keydown", e => {
       if (e.key === "Enter") {
-        const v = ditInput.value;
-        ditInput.value = "";
+        const v = dom.ditInput.value;
+        dom.ditInput.value = "";
         executeDosCommand(v);
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
         if (dit.history.length) {
           dit.histIdx = Math.min(dit.histIdx + 1, dit.history.length - 1);
-          ditInput.value = dit.history[dit.histIdx] || "";
+          dom.ditInput.value = dit.history[dit.histIdx] || "";
         }
       } else if (e.key === "ArrowDown") {
         e.preventDefault();
         dit.histIdx = Math.max(dit.histIdx - 1, -1);
-        ditInput.value = dit.histIdx >= 0 ? dit.history[dit.histIdx] : "";
+        dom.ditInput.value = dit.histIdx >= 0 ? dit.history[dit.histIdx] : "";
       }
     });
   }
