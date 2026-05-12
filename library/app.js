@@ -437,6 +437,7 @@ function setupEvents() {
 
 document.addEventListener("DOMContentLoaded", async () => {
   setupEvents();
+  dom.gameSearch?.focus();
   state.games = await loadLibrary(LIBRARY_URL);
   updateStats();
   render();
