@@ -420,7 +420,7 @@ async function loadFbGames() {
     updateFbCount();
   } catch {
     const list = document.getElementById("fbList");
-    if (list) list.innerHTML = '<div style="padding:1.5rem;text-align:center;color:#555">Error loading library. Check your connection.</div>';
+    if (list) list.innerHTML = '<div style="padding:1.5rem 1rem"><p class="dos-line" style="color:var(--err)">Bad command or file name</p><p class="dos-line dos-muted">Error: Library connection failed</p><p class="dos-line dos-muted">Check your internet connection and try again</p></div>';
   }
 }
 
@@ -437,7 +437,7 @@ function renderFbList() {
     item.className = "fb-item" + (i === fb.cursor ? " fb-cursor" : "");
     item.setAttribute("role", "option");
     item.setAttribute("aria-selected", i === fb.cursor);
-    item.innerHTML = `<span class="fb-col-name">${escapeHtml(g.title || "Unknown")}</span><span class="fb-col-year">${g.year || "????"}</span><span class="fb-col-genre">${escapeHtml(g.genre || "")}</span><span class="fb-col-status">&lt;PLAY&gt;</span>`;
+    item.innerHTML = `<span class="fb-col-num">${i + 1}</span><span class="fb-col-name">${escapeHtml(g.title || "Unknown")}</span><span class="fb-col-year">${g.year || "????"}</span><span class="fb-col-genre">${escapeHtml(g.genre || "")}</span><span class="fb-col-status">&lt;PLAY&gt;</span>`;
     item.addEventListener("click", () => { fb.cursor = i; playFbGame(fb.filtered[i]); });
     item.addEventListener("mouseenter", () => {
       fb.cursor = i;
