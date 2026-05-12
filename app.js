@@ -133,10 +133,8 @@ function showBootingOverlay() {
   const overlay = document.getElementById("loadingOverlay");
   if (!overlay) return;
   const p = overlay.querySelector("p");
-  if (p) p.textContent = "Game booting… click to dismiss";
-  overlay.style.cursor = "pointer";
-  overlay.addEventListener("click", hideLoading, { once: true });
-  _bootDismissTimer = setTimeout(hideLoading, 12000);
+  if (p) p.textContent = "Game booting…";
+  _bootDismissTimer = setTimeout(hideLoading, 2000);
 }
 function showGameCrashScreen(message) { const existing = document.getElementById("gameCrashOverlay"); if (existing) existing.remove(); const overlay = document.createElement("div"); overlay.id = "gameCrashOverlay"; overlay.className = "game-crash-overlay"; const box = document.createElement("div"); box.className = "crash-box"; const title = document.createElement("p"); title.className = "crash-title"; title.textContent = "⚠ GAME ERROR"; const msg = document.createElement("p"); msg.className = "crash-msg"; msg.textContent = message; const btn = document.createElement("button"); btn.className = "crash-dismiss ghost-btn"; btn.textContent = "Dismiss"; btn.addEventListener("click", () => overlay.remove()); box.append(title, msg, btn); overlay.appendChild(box); dom.playerShell?.appendChild(overlay); }
 function updateUI() { if (dom.stopBtn) dom.stopBtn.hidden = !state.isRunning; if (dom.saveBtn) dom.saveBtn.hidden = !state.isRunning; showEmptyState(!state.isRunning && !state.ci); }
