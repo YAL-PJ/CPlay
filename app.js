@@ -212,7 +212,10 @@ function applySoundSetting() {
 async function stopCurrent() {
   hideLoading();
   if (state.ci) {
-    try { if (typeof state.ci.exit === "function") await state.ci.exit(); else if (typeof state.ci.stop === "function") await state.ci.stop(); }
+    const ciToStop = state.ci;
+    state.ci = null;
+    const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("exit timeout")), ms))]);
+    try { if (typeof ciToStop.exit === "function") await withTimeout(ciToStop.exit(), 3000); else if (typeof ciToStop.stop === "function") await withTimeout(ciToStop.stop(), 3000); }
     catch (e) { if (!handleExitStatus(e)) logError("Stop error:", e); }
   }
   state.ci = null; state.isRunning = false;
@@ -236,7 +239,7 @@ async function startDos(bundleUrl) {
     const ci = (result instanceof Promise) ? await result : result;
     if (!ci) throw new Error("Dos initialization returned null");
     state.ci = ci; state.isRunning = true; state.currentBundle = bundleUrl; updateUI();
-    ci.events?.().onTerminate(() => stopCurrent().then(() => showEmptyState(true)));
+    ci.events?.().onTerminate(() => { state.ci = null; stopCurrent().then(() => showEmptyState(true)); });
     showBootingOverlay(); setStatus("System Ready - Drive A:", "ok"); applySoundSetting(); setTimeout(applySoundSetting, 500); setTimeout(applySoundSetting, 1500); setTimeout(applySoundSetting, 3000); setTimeout(applySoundSetting, 5000);
     dom.playerShell?.requestFullscreen().catch(() => {});
     trackEvent("game_start", { bundle_url: bundleUrl, method: state.objectUrl ? "file_upload" : "url" });
