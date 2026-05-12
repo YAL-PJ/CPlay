@@ -1,6 +1,6 @@
-/* ── C:\PLAY  —  app.js ───────────────────────────────────────────────── */
+/* ── C:\PLAY  —  app.js ───────────────────────────────────────────────────────────────── */
 
-// ── DOM References ────────────────────────────────────────────
+// ── DOM References ─────────────────────────────────────────────
 const dom = {
   statusText: document.getElementById("statusText"),
   dropzone: document.getElementById("dropzone"),
@@ -25,6 +25,7 @@ const dom = {
   featuredGamesTerminal: document.getElementById("featuredGamesTerminal"),
   openFileBrowserBtn: document.getElementById("openFileBrowserBtn"),
   fileBrowserModal: document.getElementById("fileBrowserModal"),
+  inlineBrowserView: document.getElementById("inlineBrowserView"),
 };
 
 const settingsFields = {
@@ -45,7 +46,7 @@ const FALLBACK_THUMB = "data:image/svg+xml," + encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80"><rect width="120" height="80" fill="#0d1117"/><text y="48" x="60" text-anchor="middle" font-family="monospace" font-size="14" fill="#444">DOS</text></svg>'
 );
 
-// ── Analytics helpers ──────────────────────────────────────────
+// ── Analytics helpers ──────────────────────────────────────────────
 function trackEvent(eventName, params = {}) {
   try { if (typeof gtag === "function") gtag("event", eventName, params); } catch { }
 }
@@ -347,7 +348,7 @@ async function renderSavesList() {
   } catch { }
 }
 
-// ── Library integration ────────────────────────────────────────────
+// ── Library integration ────────────────────────────────────────────────────
 function openLibrary() {
   if (!dom.libraryModal) return;
   if (dom.libraryFrame && !dom.libraryFrame.getAttribute('src')) {
@@ -385,7 +386,7 @@ async function loadFeaturedGames() {
   }
 }
 
-// ── File Browser ───────────────────────────────────────────────
+// ── File Browser (modal) ───────────────────────────────────────────────
 const fb = { games: [], filtered: [], cursor: 0 };
 
 function escapeHtml(str) {
@@ -418,9 +419,15 @@ async function loadFbGames() {
     fb.cursor = 0;
     renderFbList();
     updateFbCount();
+    if (dom.inlineBrowserView && !dom.inlineBrowserView.hidden) {
+      renderIbList();
+      updateIbCount();
+    }
   } catch {
     const list = document.getElementById("fbList");
     if (list) list.innerHTML = '<div style="padding:1.5rem 1rem"><p class="dos-line" style="color:var(--err)">Bad command or file name</p><p class="dos-line dos-muted">Error: Library connection failed</p><p class="dos-line dos-muted">Check your internet connection and try again</p></div>';
+    const ibList = document.getElementById("ibList");
+    if (ibList) ibList.innerHTML = '<div style="padding:1.5rem 1rem"><p class="dos-line" style="color:var(--err)">Bad command or file name</p><p class="dos-line dos-muted">Error: Library connection failed</p></div>';
   }
 }
 
@@ -469,8 +476,80 @@ function filterFb(query) {
 function playFbGame(game) {
   if (!game?.downloadUrl) return;
   closeFileBrowser();
+  closeInlineBrowser();
   loadBundleFromUrl(game.downloadUrl);
   trackEvent("file_browser_game_launch", { title: game.title });
+}
+
+// ── Inline File Browser (in-screen, replaces boot view) ─────────────────────
+async function openInlineBrowser() {
+  if (!dom.inlineBrowserView) { openFileBrowser(); return; }
+  showEmptyState(false);
+  dom.inlineBrowserView.hidden = false;
+  document.getElementById("ibSearch")?.focus();
+  if (!fb.games.length) {
+    await loadFbGames();
+  } else {
+    fb.filtered = [...fb.games];
+    fb.cursor = 0;
+    renderIbList();
+    updateIbCount();
+  }
+  trackEvent("inline_browser_open");
+}
+
+function closeInlineBrowser() {
+  if (!dom.inlineBrowserView || dom.inlineBrowserView.hidden) return;
+  dom.inlineBrowserView.hidden = true;
+  if (!state.isRunning && !state.ci) showEmptyState(true);
+  const s = document.getElementById("ibSearch");
+  if (s) s.value = "";
+  const cmd = document.getElementById("ibCmdText");
+  if (cmd) cmd.textContent = "";
+  fb.filtered = [...fb.games];
+  fb.cursor = 0;
+}
+
+function renderIbList() {
+  const list = document.getElementById("ibList");
+  if (!list) return;
+  if (!fb.filtered.length) {
+    list.innerHTML = '<div style="padding:1.5rem;text-align:center;color:#555">No files found.</div>';
+    return;
+  }
+  list.innerHTML = "";
+  fb.filtered.forEach((g, i) => {
+    const item = document.createElement("div");
+    item.className = "fb-item" + (i === fb.cursor ? " fb-cursor" : "");
+    item.setAttribute("role", "option");
+    item.setAttribute("aria-selected", i === fb.cursor);
+    item.innerHTML = `<span class="fb-col-num">${i + 1}</span><span class="fb-col-name">${escapeHtml(g.title || "Unknown")}</span><span class="fb-col-year">${g.year || "????"}</span><span class="fb-col-genre">${escapeHtml(g.genre || "")}</span><span class="fb-col-status">&lt;PLAY&gt;</span>`;
+    item.addEventListener("click", () => { fb.cursor = i; playFbGame(fb.filtered[i]); });
+    item.addEventListener("mouseenter", () => {
+      fb.cursor = i;
+      list.querySelectorAll(".fb-cursor").forEach(el => el.classList.remove("fb-cursor"));
+      item.classList.add("fb-cursor");
+    });
+    list.appendChild(item);
+  });
+  list.querySelector(".fb-cursor")?.scrollIntoView({ block: "nearest" });
+}
+
+function updateIbCount() {
+  const count = document.getElementById("ibCount");
+  if (count) count.textContent = `${fb.filtered.length} file(s) — ENTER to run`;
+}
+
+function filterIb(query) {
+  const q = query.toLowerCase().trim();
+  fb.filtered = q
+    ? fb.games.filter(g => g.title?.toLowerCase().includes(q) || g.genre?.toLowerCase().includes(q))
+    : [...fb.games];
+  fb.cursor = 0;
+  renderIbList();
+  updateIbCount();
+  const cmd = document.getElementById("ibCmdText");
+  if (cmd) cmd.textContent = q ? `DIR /S *${q}*` : "";
 }
 
 function renderFeaturedGameCards(games) {
@@ -517,9 +596,28 @@ function setupEventListeners() {
   dom.soundToggleFS?.addEventListener("click", toggleSound);
   dom.openLibraryBtn?.addEventListener("click", openLibrary);
   dom.closeLibraryBtn?.addEventListener("click", closeLibrary);
-  dom.openFileBrowserBtn?.addEventListener("click", openFileBrowser);
+  dom.openFileBrowserBtn?.addEventListener("click", openInlineBrowser);
   document.getElementById("fbCloseBtn")?.addEventListener("click", closeFileBrowser);
   document.getElementById("fbSearch")?.addEventListener("input", e => filterFb(e.target.value));
+  document.getElementById("ibBackBtn")?.addEventListener("click", closeInlineBrowser);
+  document.getElementById("ibSearch")?.addEventListener("input", e => filterIb(e.target.value));
+
+  dom.inlineBrowserView?.addEventListener("keydown", e => {
+    if (e.key === "Escape") { closeInlineBrowser(); return; }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      fb.cursor = Math.min(fb.cursor + 1, fb.filtered.length - 1);
+      renderIbList();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      fb.cursor = Math.max(fb.cursor - 1, 0);
+      renderIbList();
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (fb.filtered[fb.cursor]) playFbGame(fb.filtered[fb.cursor]);
+    }
+  });
+
   dom.fileBrowserModal?.addEventListener("keydown", e => {
     if (e.key === "Escape") { closeFileBrowser(); return; }
     if (e.key === "ArrowDown") {
@@ -557,9 +655,14 @@ function setupEventListeners() {
     }
   });
 
-  // Space/Enter triggers js-dos play button; Escape closes library modal
+  // Space/Enter triggers js-dos play button; Escape closes overlays
   document.addEventListener("keydown", e => {
     if (e.key === "Escape") {
+      if (dom.inlineBrowserView && !dom.inlineBrowserView.hidden) {
+        e.preventDefault();
+        closeInlineBrowser();
+        return;
+      }
       if (dom.fileBrowserModal && !dom.fileBrowserModal.hidden) {
         e.preventDefault();
         closeFileBrowser();
