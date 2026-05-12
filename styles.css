@@ -1216,6 +1216,10 @@ select:focus {
   color: var(--dos-grey);
 }
 
+.file-browser-modal[hidden] {
+  display: none;
+}
+
 .fb-header {
   display: flex;
   justify-content: space-between;
