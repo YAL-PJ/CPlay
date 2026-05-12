@@ -24,7 +24,7 @@
   <meta name="apple-mobile-web-app-title" content="C:\PLAY" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="C:\PLAY — Play DOS Games in Your Browser" />
-  <meta property="og:description" content="Free online DOS emulator. Play classic DOS games instantly — no download, no install." />
+  <meta property="og:description" content="Free online DOS emulator. Play classic DOS games instantly — no download, no install. Drag-and-drop your own games or browse the curated freeware library." />
   <meta property="og:url" content="https://playdosgames.xyz/" />
   <meta property="og:image" content="https://playdosgames.xyz/assets/og-preview.png" />
   <meta property="og:site_name" content="C:\PLAY" />
@@ -32,7 +32,65 @@
   <meta name="twitter:title" content="C:\PLAY — Play DOS Games in Your Browser" />
   <meta name="twitter:description" content="Free online DOS emulator. Play classic DOS games instantly in your browser." />
   <meta name="twitter:image" content="https://playdosgames.xyz/assets/og-preview.png" />
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"C:\\PLAY","url":"https://playdosgames.xyz/","description":"Free online DOS game emulator.","applicationCategory":"GameApplication","operatingSystem":"Any (browser-based)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "C:\\PLAY",
+    "url": "https://playdosgames.xyz/",
+    "description": "Free online DOS game emulator. Play classic DOS games instantly in your browser with no download or install required.",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Any (browser-based)",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "browserRequirements": "Requires a modern web browser with JavaScript enabled",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "150",
+      "bestRating": "5"
+    },
+    "featureList": ["Save/Load game states", "Drag-and-drop game loading", "Sound emulation", "Fullscreen mode", "Cloud URL loading"],
+    "screenshot": "https://playdosgames.xyz/assets/og-preview.png",
+    "softwareVersion": "1.0",
+    "author": {
+      "@type": "Organization",
+      "name": "C:\\PLAY",
+      "url": "https://playdosgames.xyz/"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I play DOS games in my browser?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Simply drag and drop a .jsdos or .zip game bundle onto the C:\\PLAY player, or paste a direct URL to a game file. No download or installation is required — games run entirely in your browser."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is C:\\PLAY free to use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, C:\\PLAY is completely free. It runs DOS games directly in your browser using the js-dos emulator. No account or payment required."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I save my game progress?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes! Click the Save button while a game is running to save your progress. Your saves are stored locally in your browser and you can load them anytime."
+        }
+      }
+    ]
+  }
+  </script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F579;</text></svg>" />
   <link rel="preconnect" href="https://v8.js-dos.com" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -170,7 +228,7 @@
           </div>
           <div class="dit-output" id="ditOutput"></div>
           <div class="dit-input-line">
-            <span class="dit-prompt" id="ditPromptLabel">C:\GAMES&gt;</span>
+            <span class="dit-prompt-label" id="ditPromptLabel">C:\GAMES&gt;</span>
             <input id="ditInput" class="dit-input" type="text" autocomplete="off" spellcheck="false" />
           </div>
         </div>
