@@ -232,7 +232,7 @@ async function startDos(bundleUrl) {
     await stopCurrent();
     showEmptyState(false); showLoading("Initializing System..."); setStatus("Booting...", "");
     if (window.emulators) window.emulators.pathPrefix = "https://v8.js-dos.com/latest/emulators/";
-    const result = window.Dos(dom.playerHost, { url: bundleUrl, dosboxConf: buildDosboxConf(), kiosk: !isMobile(), autoStart: true });
+    const result = window.Dos(dom.playerHost, { url: bundleUrl, dosboxConf: buildDosboxConf(), kiosk: true, autoStart: true });
     const ci = (result instanceof Promise) ? await result : result;
     if (!ci) throw new Error("Dos initialization returned null");
     state.ci = ci; state.isRunning = true; state.currentBundle = bundleUrl; updateUI();
@@ -735,6 +735,31 @@ function renderFeaturedGameCards(games) {
   dom.featuredGameCards.hidden = false;
 }
 
+function setupMobileCanvasScaling() {
+  if (!isMobile()) return;
+  function applyScale() {
+    const canvas = dom.playerHost?.querySelector('canvas');
+    if (!canvas || !dom.playerShell) return;
+    const cw = dom.playerShell.clientWidth;
+    const ch = dom.playerShell.clientHeight;
+    const nw = canvas.width;
+    const nh = canvas.height;
+    if (!cw || !ch || !nw || !nh) return;
+    const scale = Math.min(cw / nw, ch / nh);
+    const dw = Math.round(nw * scale);
+    const dh = Math.round(nh * scale);
+    canvas.style.setProperty('position', 'absolute', 'important');
+    canvas.style.setProperty('left', Math.round((cw - dw) / 2) + 'px', 'important');
+    canvas.style.setProperty('top', Math.round((ch - dh) / 2) + 'px', 'important');
+    canvas.style.setProperty('width', dw + 'px', 'important');
+    canvas.style.setProperty('height', dh + 'px', 'important');
+    canvas.style.setProperty('image-rendering', 'pixelated');
+    canvas.style.setProperty('touch-action', 'none');
+  }
+  new MutationObserver(applyScale).observe(dom.playerHost, { childList: true, subtree: true });
+  window.addEventListener('resize', applyScale, { passive: true });
+}
+
 function maybeShowPortraitHint() {
   if (!isMobile() || window.innerWidth >= window.innerHeight) return;
   if (document.getElementById('portraitHint')) return;
@@ -878,6 +903,7 @@ window.addEventListener("unhandledrejection", event => {
 
 document.addEventListener("DOMContentLoaded", async () => {
   hydrateSettingsUI(); setupEventListeners(); syncSoundIndicator();
+  setupMobileCanvasScaling();
   renderSavesList();
   setStatus("Ready — drop a .jsdos bundle or paste a URL to play", "ok"); updateUI();
 
