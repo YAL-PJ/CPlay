@@ -239,7 +239,7 @@ async function startDos(bundleUrl) {
     ci.events?.().onTerminate(() => { state.ci = null; stopCurrent().then(() => showEmptyState(true)); });
     showBootingOverlay(); setStatus("System Ready - Drive A:", "ok"); applySoundSetting(); setTimeout(applySoundSetting, 500); setTimeout(applySoundSetting, 1500); setTimeout(applySoundSetting, 3000); setTimeout(applySoundSetting, 5000);
     if (isMobile()) maybeShowPortraitHint();
-    dom.playerShell?.requestFullscreen().catch(() => {});
+    if (!isMobile()) dom.playerShell?.requestFullscreen().catch(() => {});
     trackEvent("game_start", { bundle_url: bundleUrl, method: state.objectUrl ? "file_upload" : "url" });
     return { ok: true };
   } catch (err) {
