@@ -15,7 +15,6 @@
   <meta name="keywords" content="DOS games, play DOS games online, DOS emulator, browser DOS, retro games, classic PC games, free DOS games, js-dos, online DOS player, freeware DOS games, shareware games" />
   <meta name="author" content="C:\PLAY" />
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-  <meta name="google-site-verification" content="YOUR_CODE" />
   <link rel="canonical" href="https://playdosgames.xyz/" />
   <meta name="theme-color" content="#1a1a2e" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -23,10 +22,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="C:\PLAY" />
   <meta property="og:type" content="website" />
+  <meta property="og:locale" content="en_US" />
   <meta property="og:title" content="C:\PLAY — Play DOS Games in Your Browser" />
   <meta property="og:description" content="Free online DOS emulator. Play classic DOS games instantly — no download, no install. Drag-and-drop your own games or browse the curated freeware library." />
   <meta property="og:url" content="https://playdosgames.xyz/" />
   <meta property="og:image" content="https://playdosgames.xyz/assets/og-preview.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta property="og:site_name" content="C:\PLAY" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="C:\PLAY — Play DOS Games in Your Browser" />
@@ -87,6 +89,22 @@
           "@type": "Answer",
           "text": "Yes! Click the Save button while a game is running to save your progress. Your saves are stored locally in your browser and you can load them anytime."
         }
+      },
+      {
+        "@type": "Question",
+        "name": "What DOS games can I play on C:\\PLAY?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "C:\\PLAY works with any game packaged as a .jsdos or .zip bundle. You can also browse the built-in A:\\GAMES freeware library, which includes hundreds of classic titles — action, strategy, adventure, puzzle, and more — that are legally free to play."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does C:\\PLAY work on mobile devices?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. C:\\PLAY runs in any modern browser, including mobile browsers on iOS and Android. For the best experience on phones and tablets, use fullscreen mode and a Bluetooth keyboard or gamepad."
+        }
       }
     ]
   }
@@ -102,7 +120,7 @@
   <div class="scanlines" aria-hidden="true"></div>
   <header class="top-bar">
     <div class="brand-wrap">
-      <p class="brand">C:\PLAY <span>v1.0</span></p>
+      <h1 class="brand">C:\PLAY <span>v1.0</span></h1>
       <p class="tagline">System BIOS v4.51PG, (C) 1993-2024</p>
     </div>
     <div class="top-bar-actions">
@@ -117,7 +135,7 @@
   </header>
 
   <main class="layout">
-    <section class="panel controls-panel">
+    <section class="panel controls-panel" aria-label="Load and play a DOS game">
       <div class="controls-hdr"><span>A:\CONTROLS</span><span class="controls-hdr-sub">LOAD &amp; PLAY</span></div>
       <div class="controls-body">
         <p class="subtle">Drop a <strong>.jsdos</strong> bundle or <strong>.zip</strong> to play locally. Nothing leaves your browser.</p>
@@ -155,7 +173,7 @@
       </div>
     </section>
 
-    <section class="panel player-panel">
+    <section class="panel player-panel" aria-label="DOS game player">
       <div class="player-topline">
         <p id="statusText">Ready &mdash; load a bundle or try a demo</p>
         <span class="player-topline-ver">v1.0</span>
