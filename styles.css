@@ -480,3 +480,22 @@ input:focus, select:focus { outline: none; border-color: var(--accent-dim); box-
   transition: none !important;
 }
 .dit-input:focus { outline: none !important; box-shadow: none !important; border-color: transparent !important; }
+
+/* Embedded terminal inside .dos-terminal boot box */
+.dos-terminal .dit-output {
+  max-height: 120px;
+  overflow-y: auto;
+  background: transparent;
+  padding: 0.25rem 0;
+  opacity: 1 !important;
+  animation: none !important;
+}
+.dit-input-line--embedded {
+  background: transparent;
+  border-top: 1px solid #222;
+  padding: 0.3rem 0 0;
+  margin-top: 0.15rem;
+  opacity: 1 !important;
+  animation: none !important;
+}
+.dit-input-line--embedded .dit-input::placeholder { color: #444; font-style: italic; }
