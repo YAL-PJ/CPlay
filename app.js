@@ -39,6 +39,7 @@ const settingsFields = {
 
 const defaultSettings = { cycles: 12000, memsize: 16, sound: "on", themeTint: "amber" };
 const state = { ci: null, isRunning: false, startingLock: false, objectUrl: null, currentBundle: "" };
+const isMobile = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
 const log = (...a) => console.log("[CPLAY]", ...a);
 const logError = (...a) => console.error("[CPLAY ERROR]", ...a);
@@ -231,12 +232,13 @@ async function startDos(bundleUrl) {
     await stopCurrent();
     showEmptyState(false); showLoading("Initializing System..."); setStatus("Booting...", "");
     if (window.emulators) window.emulators.pathPrefix = "https://v8.js-dos.com/latest/emulators/";
-    const result = window.Dos(dom.playerHost, { url: bundleUrl, dosboxConf: buildDosboxConf(), kiosk: true, autoStart: true });
+    const result = window.Dos(dom.playerHost, { url: bundleUrl, dosboxConf: buildDosboxConf(), kiosk: !isMobile(), autoStart: true });
     const ci = (result instanceof Promise) ? await result : result;
     if (!ci) throw new Error("Dos initialization returned null");
     state.ci = ci; state.isRunning = true; state.currentBundle = bundleUrl; updateUI();
     ci.events?.().onTerminate(() => { state.ci = null; stopCurrent().then(() => showEmptyState(true)); });
     showBootingOverlay(); setStatus("System Ready - Drive A:", "ok"); applySoundSetting(); setTimeout(applySoundSetting, 500); setTimeout(applySoundSetting, 1500); setTimeout(applySoundSetting, 3000); setTimeout(applySoundSetting, 5000);
+    if (isMobile()) maybeShowPortraitHint();
     dom.playerShell?.requestFullscreen().catch(() => {});
     trackEvent("game_start", { bundle_url: bundleUrl, method: state.objectUrl ? "file_upload" : "url" });
     return { ok: true };
@@ -731,6 +733,22 @@ function renderFeaturedGameCards(games) {
     dom.featuredGameCards.appendChild(btn);
   });
   dom.featuredGameCards.hidden = false;
+}
+
+function maybeShowPortraitHint() {
+  if (!isMobile() || window.innerWidth >= window.innerHeight) return;
+  if (document.getElementById('portraitHint')) return;
+  const hint = document.createElement('div');
+  hint.id = 'portraitHint';
+  hint.className = 'portrait-hint';
+  hint.innerHTML = '<div class="portrait-hint-box"><p class="portrait-hint-icon">&#x21BA;</p><p>Rotate to landscape<br>for best experience</p><button class="ghost-btn">OK</button></div>';
+  hint.querySelector('button').addEventListener('click', () => hint.remove());
+  const onResize = () => { if (window.innerWidth >= window.innerHeight) hint.remove(); };
+  window.addEventListener('resize', onResize);
+  new MutationObserver((_, obs) => {
+    if (!document.getElementById('portraitHint')) { window.removeEventListener('resize', onResize); obs.disconnect(); }
+  }).observe(dom.playerShell, { childList: true, subtree: false });
+  dom.playerShell?.appendChild(hint);
 }
 
 function setupEventListeners() {
