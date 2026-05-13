@@ -26,8 +26,6 @@ const dom = {
   openFileBrowserBtn: document.getElementById("openFileBrowserBtn"),
   fileBrowserModal: document.getElementById("fileBrowserModal"),
   inlineBrowserView: document.getElementById("inlineBrowserView"),
-  openDosTerminalBtn: document.getElementById("openDosTerminalBtn"),
-  dosTerminalInteractive: document.getElementById("dosTerminalInteractive"),
   ditOutput: document.getElementById("ditOutput"),
   ditInput: document.getElementById("ditInput"),
 };
@@ -552,16 +550,13 @@ function ditLine(text, cls = "dit-out") {
 }
 
 async function openDosTerminal() {
-  if (!dom.dosTerminalInteractive) return;
-  showEmptyState(false);
-  dom.dosTerminalInteractive.hidden = false;
   if (!fb.games.length) await loadFbGames();
   if (dom.ditOutput && dom.ditOutput.children.length === 0) {
     ditAppend(
       ditLine("Microsoft(R) MS-DOS(R) Version 6.22") +
       ditLine("             (C)Copyright Microsoft Corp 1981-1994.", "dit-out dit-dim") +
       ditLine("") +
-      `<p class="dit-line dit-out dit-dim">Type <span class="dit-key">HELP</span> for available commands. Click a filename to launch the game.</p>` +
+      `<p class="dit-line dit-out dit-dim">Type <span class="dit-key">HELP</span> for commands. Click a filename to launch.</p>` +
       ditLine("")
     );
   }
@@ -570,9 +565,7 @@ async function openDosTerminal() {
 }
 
 function closeDosTerminal() {
-  if (!dom.dosTerminalInteractive || dom.dosTerminalInteractive.hidden) return;
-  dom.dosTerminalInteractive.hidden = true;
-  if (!state.isRunning && !state.ci) showEmptyState(true);
+  // terminal is always embedded in the boot screen; nothing to close
 }
 
 async function executeDosCommand(raw) {
@@ -755,13 +748,10 @@ function setupEventListeners() {
   dom.openLibraryBtn?.addEventListener("click", openLibrary);
   dom.closeLibraryBtn?.addEventListener("click", closeLibrary);
   dom.openFileBrowserBtn?.addEventListener("click", openInlineBrowser);
-  dom.openDosTerminalBtn?.addEventListener("click", openDosTerminal);
   document.getElementById("fbCloseBtn")?.addEventListener("click", closeFileBrowser);
   document.getElementById("fbSearch")?.addEventListener("input", e => filterFb(e.target.value));
   document.getElementById("ibBackBtn")?.addEventListener("click", closeInlineBrowser);
   document.getElementById("ibSearch")?.addEventListener("input", e => filterIb(e.target.value));
-  document.getElementById("ditCloseBtn")?.addEventListener("click", closeDosTerminal);
-
   // DOS terminal keyboard input
   if (dom.ditInput) {
     dom.ditInput.addEventListener("keydown", e => {
@@ -882,6 +872,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Load featured games from library into boot screen
   loadFeaturedGames();
+
+  // Initialize embedded terminal in boot screen
+  openDosTerminal();
 
   // auto-launch if ?bundle= parameter is provided (from A:\\GAMES library)
   const urlParams = new URLSearchParams(window.location.search);

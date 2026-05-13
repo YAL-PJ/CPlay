@@ -179,10 +179,11 @@
                 <p class="dos-line dos-muted"> Directory of C:\GAMES</p>
                 <p class="dos-line dos-muted">&nbsp;</p>
                 <div id="featuredGamesTerminal"><p class="dos-line dos-muted"> &lt;Loading library...&gt;</p></div>
-                <p class="dos-line">&nbsp;</p>
-                <p class="dos-line"><span class="dos-prompt">C:\GAMES&gt;</span> <button id="openDosTerminalBtn" class="dos-cmd-btn" title="Open interactive DOS terminal">TERMINAL</button></p>
-                <p class="dos-line"><span class="dos-prompt">C:\GAMES&gt;</span> <span class="dos-cursor">_</span></p>
-                <p class="dos-line dos-muted" style="margin-top:0.4rem;font-size:0.72rem">&uarr; <span style="color:#00a8a8">DIR /B</span> = visual browser &nbsp;&mdash;&nbsp; <span style="color:#00a8a8">TERMINAL</span> = type real DOS commands</p>
+                <div class="dit-output" id="ditOutput"></div>
+                <div class="dit-input-line dit-input-line--embedded">
+                  <span class="dit-prompt-label" id="ditPromptLabel">C:\GAMES&gt;</span>
+                  <input id="ditInput" class="dit-input" type="text" autocomplete="off" spellcheck="false" placeholder="type a command…" />
+                </div>
               </div>
               <div id="featuredGameCards" class="featured-game-cards" hidden></div>
               <div class="dos-dropzone-area" id="playerDropzone">
@@ -219,19 +220,6 @@
           <div class="fb-cmdline"><span class="fb-prompt">C:\GAMES&gt;</span><span class="dos-cursor">_</span></div>
         </div>
 
-        <!-- Interactive DOS Terminal -->
-        <div id="dosTerminalInteractive" class="dos-interactive-terminal" hidden>
-          <div class="dit-header">
-            <span class="dit-title">C:\GAMES</span>
-            <span class="dit-subtitle">MS-DOS 6.22 &mdash; type HELP for commands</span>
-            <button id="ditCloseBtn" class="fb-close-hint" type="button">[ESC] Exit</button>
-          </div>
-          <div class="dit-output" id="ditOutput"></div>
-          <div class="dit-input-line">
-            <span class="dit-prompt-label" id="ditPromptLabel">C:\GAMES&gt;</span>
-            <input id="ditInput" class="dit-input" type="text" autocomplete="off" spellcheck="false" />
-          </div>
-        </div>
 
       </div>
     </section>
