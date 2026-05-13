@@ -60,6 +60,8 @@ body {
   background: var(--bg);
   min-height: 100vh;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── CRT scanlines ────────────────────────────────────────────────────────────── */
@@ -96,6 +98,7 @@ body {
   padding: 0.75rem 1.25rem;
   border-bottom: 2px solid var(--dos-blue);
   background: var(--panel);
+  flex-shrink: 0;
 }
 
 .brand-wrap { display: flex; align-items: baseline; gap: 1rem; }
@@ -156,7 +159,7 @@ body {
 .sound-toggle-fullscreen.muted .sound-off-icon { display: block; }
 .sound-toggle-fullscreen.muted { color: var(--err); border-color: rgba(255,107,107,0.3); }
 
-.layout { display: grid; gap: 0; grid-template-columns: 320px 1fr; height: calc(100vh - 52px); }
+.layout { display: grid; gap: 0; grid-template-columns: 320px 1fr; flex: 1; min-height: 0; }
 .panel { background: var(--panel); border: 1px solid var(--panel-border); }
 
 /* ── Controls panel ────────────────────────────────────────────────────────────── */
@@ -210,16 +213,16 @@ input:focus, select:focus { outline: none; border-color: var(--accent-dim); box-
 #statusText.error { color: var(--err); }
 #statusText.ok { color: var(--ok); }
 
-#playerShell { overflow: hidden; background: #0a0a0a; position: relative; display: grid; place-items: center; transition: box-shadow 0.2s ease; }
+#playerShell { overflow: hidden; background: #0a0a0a; position: relative; display: block; transition: box-shadow 0.2s ease; }
 #playerShell.player-dragging { box-shadow: inset 0 0 60px rgba(255,180,84,0.15), inset 0 0 120px rgba(255,180,84,0.05); }
 #playerShell.player-dragging .dos-dropzone-area { border-color: var(--accent); background: rgba(255,180,84,0.08); }
 #playerShell.player-dragging .dos-drop-icon { color: var(--accent); transform: translateY(3px); }
-#dos-player { width: 100%; height: 100%; display: flex !important; align-items: center; justify-content: center; cursor: none; }
-#dos-player canvas { cursor: none; }
-#dos-player div { width: 100%; height: 100%; }
+#dos-player { position: absolute; inset: 0; display: flex !important; align-items: center; justify-content: center; cursor: none; }
+#dos-player canvas { cursor: none; max-width: 100%; max-height: 100%; }
+#dos-player > div { width: 100%; height: 100%; }
 
 /* ── Boot screen ───────────────────────────────────────────────────────────────── */
-.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 0; user-select: none; }
+.empty-state { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; user-select: none; }
 .dos-boot-screen { display: flex; flex-direction: column; width: 100%; height: 100%; background: #0a0a12; font-family: var(--font-mono); }
 
 .dos-header { display: flex; justify-content: space-between; align-items: center; background: var(--dos-blue); color: var(--dos-cyan); padding: 0.35rem 1rem; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; border-bottom: 1px solid #0050a8; flex-shrink: 0; }
@@ -284,7 +287,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent-dim); box-
 
 /* ── Fullscreen ─────────────────────────────────────────────────────────────────── */
 #playerShell:fullscreen { background: #000; }
-#playerShell:fullscreen #dos-player { width: 100vw; height: 100vh; object-fit: contain; }
+#playerShell:fullscreen #dos-player { inset: 0; }
 #playerShell:fullscreen .loading-overlay { border-radius: 0; }
 
 /* ── Saves ──────────────────────────────────────────────────────────────────────── */
@@ -321,7 +324,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent-dim); box-
 
 /* ── Responsive ────────────────────────────────────────────────────────────────── */
 @media (max-width: 860px) {
-  .layout { grid-template-columns: 1fr; grid-template-rows: 1fr auto; height: calc(100vh - 52px); }
+  .layout { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
   .player-panel { order: 1; min-height: 50vh; }
   .controls-panel { order: 2; border-right: none; border-top: 1px solid var(--panel-border); max-height: 45vh; }
   .controls-body { max-height: calc(45vh - 32px); overflow-y: auto; }
@@ -329,7 +332,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent-dim); box-
   .brand { font-size: 1.2rem; }
   .tagline { font-size: 0.7rem; }
   .settings-grid { grid-template-columns: 1fr 1fr; }
-  .dos-body { gap: 0.75rem; padding: 0.75rem 1rem; }
+  .dos-body { gap: 0.75rem; padding: 0.75rem 1rem; justify-content: flex-start; overflow-y: auto; }
   .dos-terminal { padding: 0.75rem 1rem; }
   .dos-footer { gap: 1rem; font-size: 0.6rem; flex-wrap: wrap; justify-content: center; }
   .featured-game-cards { grid-template-columns: repeat(3,1fr); }
