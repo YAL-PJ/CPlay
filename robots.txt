@@ -2,3 +2,6 @@ User-agent: *
 Allow: /
 
 Sitemap: https://playdosgames.xyz/sitemap.xml
+
+# AI crawlers — see llms.txt for a structured site summary
+# https://llmstxt.org/
