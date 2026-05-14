@@ -437,7 +437,13 @@ function setupEvents() {
 
 document.addEventListener("DOMContentLoaded", async () => {
   setupEvents();
-  dom.gameSearch?.focus();
+  const initialQuery = params.get("q") || "";
+  if (initialQuery) {
+    state.searchQuery = initialQuery;
+    if (dom.gameSearch) dom.gameSearch.value = initialQuery;
+  } else {
+    dom.gameSearch?.focus();
+  }
   state.games = await loadLibrary(LIBRARY_URL);
   updateStats();
   render();

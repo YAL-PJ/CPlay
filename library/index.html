@@ -8,7 +8,7 @@
   <meta name="description" content="Browse and play hundreds of free classic DOS games. Freeware and shareware titles from the golden age of PC gaming — action, strategy, adventure, puzzle, and more. No download required." />
   <meta name="keywords" content="free DOS games, freeware DOS games, shareware DOS games, classic PC games list, retro DOS games catalog, play DOS games online, DOS game library, 90s PC games, 80s PC games" />
   <meta name="author" content="C:\PLAY" />
-  <meta name="robots" content="index, follow" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
   <link rel="canonical" href="https://playdosgames.xyz/library/" />
   <meta name="theme-color" content="#1a1a2e" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -49,6 +49,23 @@
     }
   }
   </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "C:\\PLAY",
+    "url": "https://playdosgames.xyz/",
+    "description": "Free browser-based DOS game emulator. Play classic DOS games instantly — no download or install required.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://playdosgames.xyz/library/?q={search_term_string}"
+      },
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F4BE;</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -71,6 +88,7 @@
 
   <main class="library-page">
     <aside class="sidebar">
+      <h2 class="sr-only">Filter and Search DOS Games</h2>
       <div class="search-box">
         <input id="gameSearch" type="search" placeholder="Search games..." aria-label="Search games"
           autocomplete="off" autofocus />
@@ -121,6 +139,7 @@
     </aside>
 
     <section class="content">
+      <h2 class="sr-only">Free Classic DOS Games — Browse the Freeware Library</h2>
       <div class="content-bar">
         <p id="resultsInfo" class="results-info">Loading library...</p>
         <button id="clearFilters" class="ghost-btn clear-btn" type="button" hidden>Clear filters</button>
