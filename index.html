@@ -109,6 +109,23 @@
     ]
   }
   </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "C:\\PLAY",
+    "url": "https://playdosgames.xyz/",
+    "description": "Free browser-based DOS game emulator. Play classic DOS games instantly — no download or install required.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://playdosgames.xyz/library/?q={search_term_string}"
+      },
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F579;</text></svg>" />
   <link rel="preconnect" href="https://v8.js-dos.com" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -136,7 +153,7 @@
 
   <main class="layout">
     <section class="panel controls-panel" aria-label="Load and play a DOS game">
-      <div class="controls-hdr"><span>A:\CONTROLS</span><span class="controls-hdr-sub">LOAD &amp; PLAY</span></div>
+      <div class="controls-hdr"><h2 class="controls-hdr-title">A:\CONTROLS</h2><span class="controls-hdr-sub">LOAD &amp; PLAY</span></div>
       <div class="controls-body">
         <p class="subtle">Drop a <strong>.jsdos</strong> bundle or <strong>.zip</strong> to play locally. Nothing leaves your browser.</p>
         <label class="dropzone" id="dropzone">
@@ -174,6 +191,7 @@
     </section>
 
     <section class="panel player-panel" aria-label="DOS game player">
+      <h2 class="sr-only">DOS Game Player — Run Classic DOS Games Free in Your Browser</h2>
       <div class="player-topline">
         <p id="statusText">Ready &mdash; load a bundle or try a demo</p>
         <span class="player-topline-ver">v1.0</span>

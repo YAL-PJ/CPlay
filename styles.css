@@ -101,6 +101,8 @@ body {
   flex-shrink: 0;
 }
 
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.controls-hdr-title { margin: 0; font-size: inherit; font-weight: inherit; color: inherit; letter-spacing: inherit; }
 .brand-wrap { display: flex; align-items: baseline; gap: 1rem; }
 .brand {
   font-family: var(--font-display);
