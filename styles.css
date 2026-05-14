@@ -543,3 +543,74 @@ input:focus, select:focus { outline: none; border-color: var(--accent-dim); box-
   0%, 100% { transform: rotate(0deg); }
   50% { transform: rotate(-90deg); }
 }
+
+/* ── FAQ Section ──────────────────────────────────────────────────────────── */
+.faq-section {
+  border-top: 1px solid var(--panel-border);
+  padding: 40px 24px 48px;
+}
+.faq-inner {
+  max-width: 860px;
+  margin: 0 auto;
+}
+.faq-title {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.faq-item {
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+}
+.faq-q {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 14px 16px;
+  text-align: left;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.faq-q::after {
+  content: '+';
+  flex-shrink: 0;
+  color: var(--accent);
+  font-size: 1rem;
+  transition: transform var(--transition);
+}
+.faq-q[aria-expanded="true"]::after {
+  content: '−';
+}
+.faq-q:hover {
+  color: var(--accent);
+}
+.faq-a {
+  padding: 0 16px 14px;
+  color: var(--muted);
+  font-size: 0.83rem;
+  line-height: 1.75;
+}
+.faq-a strong { color: var(--text); }
+
+/* ── Inline text link ─────────────────────────────────────────────────────── */
+.text-link {
+  color: var(--accent);
+  text-decoration: none;
+}
+.text-link:hover {
+  text-decoration: underline;
+}

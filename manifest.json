@@ -1,0 +1,28 @@
+{
+  "name": "C:\\PLAY — DOS Games",
+  "short_name": "C:\\PLAY",
+  "description": "Free browser-based DOS game emulator. Play hundreds of classic DOS games online — no download required.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#05080d",
+  "theme_color": "#1a1a2e",
+  "orientation": "landscape",
+  "lang": "en-US",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "/assets/og-preview.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/assets/og-preview.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "label": "C:\\PLAY DOS emulator"
+    }
+  ]
+}

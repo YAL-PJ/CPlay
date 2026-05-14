@@ -29,11 +29,13 @@
   <meta property="og:image" content="https://playdosgames.xyz/assets/og-preview.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="C:\PLAY — free browser-based DOS game emulator" />
   <meta property="og:site_name" content="C:\PLAY" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="C:\PLAY — Play DOS Games in Your Browser" />
   <meta name="twitter:description" content="Free online DOS emulator. Play classic DOS games instantly in your browser." />
   <meta name="twitter:image" content="https://playdosgames.xyz/assets/og-preview.png" />
+  <meta name="twitter:image:alt" content="C:\PLAY — free browser-based DOS game emulator" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -126,14 +128,84 @@
     }
   }
   </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "C:\\PLAY",
+    "url": "https://playdosgames.xyz/",
+    "logo": "https://playdosgames.xyz/assets/og-preview.png",
+    "description": "Free browser-based DOS game emulator. Play hundreds of classic DOS games online — no download required."
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Popular DOS Games — Play Free in Browser",
+    "description": "Classic DOS games playable free in your browser via C:\\PLAY",
+    "url": "https://playdosgames.xyz/library/",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "item": {
+          "@type": "VideoGame",
+          "name": "DOOM Shareware",
+          "description": "The legendary first-person shooter from id Software. Play the shareware episode free in your browser.",
+          "genre": "Action",
+          "gamePlatform": "DOS",
+          "image": "https://playdosgames.xyz/assets/doom.png",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "item": {
+          "@type": "VideoGame",
+          "name": "Digger Remastered",
+          "description": "Classic arcade-style dig-and-collect DOS game, free in your browser.",
+          "genre": "Arcade",
+          "gamePlatform": "DOS",
+          "image": "https://playdosgames.xyz/assets/digger.png",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "item": {
+          "@type": "VideoGame",
+          "name": "3D Pinball Space Cadet",
+          "description": "The iconic 3D pinball game from the Windows era, now playable free in your browser.",
+          "genre": "Arcade",
+          "gamePlatform": "DOS",
+          "image": "https://playdosgames.xyz/assets/pinball.png",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+        }
+      }
+    ]
+  }
+  </script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F579;</text></svg>" />
+  <link rel="manifest" href="/manifest.json" />
   <link rel="preconnect" href="https://v8.js-dos.com" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" href="./styles.css" as="style" />
   <link rel="stylesheet" href="https://v8.js-dos.com/latest/js-dos.css" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
+  <noscript>
+    <div style="background:#05080d;color:#d4dae6;font-family:'Courier New',monospace;padding:40px 24px;max-width:720px;margin:0 auto">
+      <h1 style="color:#ffb454;margin-bottom:16px">C:\PLAY — Free DOS Games in Your Browser</h1>
+      <p style="margin-bottom:12px">JavaScript is required to run the DOS emulator. Please enable JavaScript in your browser to play games.</p>
+      <p style="margin-bottom:24px">C:\PLAY lets you play hundreds of classic DOS games — Action, Strategy, Adventure, Puzzle, and more — all free, with no download or account required.</p>
+      <p><a href="/library/" style="color:#ffb454">→ Browse the A:\GAMES freeware library</a></p>
+    </div>
+  </noscript>
   <div class="scanlines" aria-hidden="true"></div>
   <header class="top-bar">
     <div class="brand-wrap">
@@ -172,6 +244,7 @@
         <div class="library-section">
           <button id="openLibraryBtn" class="action-btn" type="button" style="width:100%">&#x1F4BE; Open Game Library</button>
           <p class="small-note">Browse the A:\GAMES freeware &amp; shareware catalog.</p>
+          <p class="small-note"><a href="/library/" class="text-link">Browse 500+ DOS games in the freeware library →</a></p>
         </div>
         <div class="saves-section">
           <p class="section-title">Saved Games</p>
@@ -261,6 +334,35 @@
     </section>
   </main>
 
+  <!-- FAQ Section -->
+  <section class="faq-section" aria-labelledby="faq-heading">
+    <div class="faq-inner">
+      <h2 id="faq-heading" class="faq-title">Frequently Asked Questions</h2>
+      <dl class="faq-list">
+        <div class="faq-item">
+          <dt><button class="faq-q" aria-expanded="false" aria-controls="faq-a1">How do I play DOS games in my browser?</button></dt>
+          <dd id="faq-a1" class="faq-a" hidden>Drag and drop a <strong>.jsdos</strong> or <strong>.zip</strong> game bundle onto the C:\PLAY player, or paste a direct URL to a game file. No download or installation is required — games run entirely in your browser.</dd>
+        </div>
+        <div class="faq-item">
+          <dt><button class="faq-q" aria-expanded="false" aria-controls="faq-a2">Is C:\PLAY free to use?</button></dt>
+          <dd id="faq-a2" class="faq-a" hidden>Yes, C:\PLAY is completely free. It runs DOS games directly in your browser using the js-dos emulator. No account or payment required.</dd>
+        </div>
+        <div class="faq-item">
+          <dt><button class="faq-q" aria-expanded="false" aria-controls="faq-a3">Can I save my game progress?</button></dt>
+          <dd id="faq-a3" class="faq-a" hidden>Yes — click the <strong>Save</strong> button while a game is running to save your progress. Saves are stored locally in your browser and can be loaded anytime.</dd>
+        </div>
+        <div class="faq-item">
+          <dt><button class="faq-q" aria-expanded="false" aria-controls="faq-a4">What DOS games can I play on C:\PLAY?</button></dt>
+          <dd id="faq-a4" class="faq-a" hidden>C:\PLAY works with any game packaged as a .jsdos or .zip bundle. You can also <a href="/library/" class="text-link">browse the A:\GAMES freeware library</a>, which includes hundreds of classic titles — action, strategy, adventure, puzzle, and more — that are legally free to play.</dd>
+        </div>
+        <div class="faq-item">
+          <dt><button class="faq-q" aria-expanded="false" aria-controls="faq-a5">Does C:\PLAY work on mobile devices?</button></dt>
+          <dd id="faq-a5" class="faq-a" hidden>Yes. C:\PLAY runs in any modern browser, including mobile browsers on iOS and Android. For the best experience on phones and tablets, use fullscreen mode and a Bluetooth keyboard or gamepad.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
   <!-- Library Modal -->
   <div id="libraryModal" class="library-modal" hidden>
     <div class="library-modal-bar">
@@ -282,5 +384,15 @@
 
   <script src="https://v8.js-dos.com/latest/js-dos.js"></script>
   <script type="module" src="./app.js"></script>
+  <script>
+    document.querySelectorAll('.faq-q').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const expanded = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', String(!expanded));
+        const answer = document.getElementById(btn.getAttribute('aria-controls'));
+        if (answer) answer.hidden = expanded;
+      });
+    });
+  </script>
 </body>
 </html>

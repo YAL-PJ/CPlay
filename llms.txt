@@ -1,0 +1,42 @@
+# C:\PLAY
+
+> Free browser-based DOS game emulator. Play hundreds of classic DOS games instantly in your browser — no download, no install, no account required.
+
+C:\PLAY (https://playdosgames.xyz/) is a free online DOS emulator powered by js-dos. It runs directly in any modern browser on desktop or mobile. Users can drag-and-drop their own .jsdos or .zip game bundles, paste a direct URL, or browse the built-in A:\GAMES freeware library containing hundreds of classic DOS titles.
+
+## Features
+
+- Play any DOS game in your browser with no download or install required
+- Save and load game states (stored locally in the browser)
+- Drag-and-drop .jsdos or .zip game bundles
+- Paste direct URLs from GitHub, Google Drive, Dropbox, or OneDrive
+- Fullscreen mode, sound emulation, adjustable CPU cycles and memory
+- Retro CRT amber/green/ice color themes
+
+## Game Library
+
+The A:\GAMES library (https://playdosgames.xyz/library/) contains hundreds of freeware and shareware DOS games spanning Action, Strategy, Adventure, Puzzle, Sports, RPG, Simulation, and more. Games are filterable by genre, decade, license, and playable status. All titles in the library are legally free to play.
+
+## Game Pages
+
+Individual pages for each DOS game in the library are available at:
+https://playdosgames.xyz/games/[game-id]/
+
+Each page includes the game title, genre, release year, license, screenshot, and a direct Play button that launches the game in the emulator.
+
+## How to Play
+
+1. Go to https://playdosgames.xyz/
+2. Open the A:\GAMES library and pick a game, OR paste a .jsdos/.zip bundle URL, OR drag-and-drop a local file
+3. The game launches in the browser — no plugin or download needed
+
+## Technical Notes
+
+- Built on js-dos (https://v8.js-dos.com), a WebAssembly DOSBox port
+- All emulation runs client-side in the browser — no server processing
+- Save states are stored in browser IndexedDB, not on any server
+- Compatible with Chrome, Firefox, Safari, Edge on desktop and mobile
+
+## Sitemap
+
+https://playdosgames.xyz/sitemap.xml
