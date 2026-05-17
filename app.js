@@ -126,14 +126,94 @@ function setStatus(message, type = "ok") { if (!dom.statusText) return; dom.stat
 function handleExitStatus(err) { const isExit = err && (err.name === "ExitStatus" || (err.message && err.message.includes("ExitStatus"))); return !!(isExit && (err.status === 0 || !err.status)); }
 function showEmptyState(visible) { if (dom.emptyState) dom.emptyState.style.display = visible ? "" : "none"; }
 let _bootDismissTimer = null;
-function hideLoading() { if (_bootDismissTimer) { clearTimeout(_bootDismissTimer); _bootDismissTimer = null; } document.getElementById("loadingOverlay")?.remove(); }
+let _bootFrameRaf = null;
+let _bootPlayObserver = null;
+function hideLoading() {
+  if (_bootDismissTimer) { clearTimeout(_bootDismissTimer); _bootDismissTimer = null; }
+  if (_bootFrameRaf) { cancelAnimationFrame(_bootFrameRaf); _bootFrameRaf = null; }
+  if (_bootPlayObserver) { _bootPlayObserver.disconnect(); _bootPlayObserver = null; }
+  document.getElementById("loadingOverlay")?.remove();
+}
 function showLoading(message) { hideLoading(); const overlay = document.createElement("div"); overlay.className = "loading-overlay"; overlay.id = "loadingOverlay"; overlay.innerHTML = '<div class="spinner"></div>'; const p = document.createElement("p"); p.textContent = message; overlay.appendChild(p); dom.playerShell.appendChild(overlay); }
+
+// Detect whether the js-dos canvas has actually painted a non-black frame.
+function canvasHasPainted(canvas) {
+  try {
+    if (!canvas || !canvas.width || !canvas.height) return false;
+    const gl = canvas.getContext("webgl2") || canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+    if (gl) {
+      const w = Math.min(canvas.width, 32), h = Math.min(canvas.height, 32);
+      const px = new Uint8Array(w * h * 4);
+      gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
+      for (let i = 0; i < px.length; i += 4) if (px[i] | px[i + 1] | px[i + 2]) return true;
+      return false;
+    }
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return true; // unknown context — assume painted to avoid hanging overlay
+    const w = Math.min(canvas.width, 32), h = Math.min(canvas.height, 32);
+    const data = ctx.getImageData(0, 0, w, h).data;
+    for (let i = 0; i < data.length; i += 4) if (data[i] | data[i + 1] | data[i + 2]) return true;
+    return false;
+  } catch {
+    return true; // tainted / cross-origin — don't block dismissal
+  }
+}
+
+function dispatchPlayClick(el) {
+  if (!el) return;
+  try {
+    el.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
+    el.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, cancelable: true }));
+    el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+  } catch {
+    try { el.click(); } catch { }
+  }
+}
+
+function findPlayButton(root) {
+  const host = root || dom.playerHost || document;
+  return host.querySelector(".play-button")
+    || host.querySelector(".emulator-click-to-start-overlay")
+    || host.querySelector(".emulator-click-to-start-icon")
+    || document.querySelector(".play-button")
+    || document.querySelector(".emulator-click-to-start-overlay");
+}
+
+// Auto-click js-dos's "click to start" the moment it mounts.
+function watchForPlayButton() {
+  if (!dom.playerHost) return;
+  if (_bootPlayObserver) { _bootPlayObserver.disconnect(); _bootPlayObserver = null; }
+  const tryClick = () => {
+    const btn = findPlayButton(dom.playerHost);
+    if (btn) { dispatchPlayClick(btn); return true; }
+    return false;
+  };
+  if (tryClick()) return;
+  _bootPlayObserver = new MutationObserver(() => { if (tryClick()) { _bootPlayObserver?.disconnect(); _bootPlayObserver = null; } });
+  _bootPlayObserver.observe(dom.playerHost, { childList: true, subtree: true });
+  // Safety: stop watching after 15s either way.
+  setTimeout(() => { if (_bootPlayObserver) { _bootPlayObserver.disconnect(); _bootPlayObserver = null; } }, 15000);
+}
+
 function showBootingOverlay() {
   const overlay = document.getElementById("loadingOverlay");
   if (!overlay) return;
   const p = overlay.querySelector("p");
   if (p) p.textContent = "Game booting…";
-  _bootDismissTimer = setTimeout(hideLoading, 2000);
+  // Try to auto-start past the js-dos click-to-start overlay.
+  watchForPlayButton();
+  // Keep the spinner up until the canvas actually paints a frame, with a
+  // hard 15s cap so a busted bundle can't strand the overlay forever.
+  const startedAt = performance.now();
+  const HARD_CAP_MS = 15000;
+  const tick = () => {
+    _bootFrameRaf = null;
+    const canvas = dom.playerHost?.querySelector("canvas");
+    if (canvas && canvasHasPainted(canvas)) { hideLoading(); return; }
+    if (performance.now() - startedAt > HARD_CAP_MS) { hideLoading(); return; }
+    _bootFrameRaf = requestAnimationFrame(tick);
+  };
+  _bootFrameRaf = requestAnimationFrame(tick);
 }
 function showGameCrashScreen(message) { const existing = document.getElementById("gameCrashOverlay"); if (existing) existing.remove(); const overlay = document.createElement("div"); overlay.id = "gameCrashOverlay"; overlay.className = "game-crash-overlay"; const box = document.createElement("div"); box.className = "crash-box"; const title = document.createElement("p"); title.className = "crash-title"; title.textContent = "⚠ GAME ERROR"; const msg = document.createElement("p"); msg.className = "crash-msg"; msg.textContent = message; const btn = document.createElement("button"); btn.className = "crash-dismiss ghost-btn"; btn.textContent = "Dismiss"; btn.addEventListener("click", () => overlay.remove()); box.append(title, msg, btn); overlay.appendChild(box); dom.playerShell?.appendChild(overlay); }
 function updateUI() { if (dom.stopBtn) dom.stopBtn.hidden = !state.isRunning; if (dom.saveBtn) dom.saveBtn.hidden = !state.isRunning; showEmptyState(!state.isRunning && !state.ci); }
@@ -847,19 +927,23 @@ function setupEventListeners() {
     if (e.key !== " " && e.key !== "Enter") return;
     const tag = document.activeElement?.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-    const host = dom.playerHost || document;
-    const playBtn = host.querySelector(".play-button")
-      || host.querySelector(".emulator-click-to-start-overlay")
-      || host.querySelector(".emulator-click-to-start-icon")
-      || document.querySelector(".play-button")
-      || document.querySelector(".emulator-click-to-start-overlay");
+    const playBtn = findPlayButton();
     if (playBtn) {
       e.preventDefault();
       if (tag === "BUTTON") document.activeElement.blur();
-      playBtn.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
-      playBtn.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, cancelable: true }));
-      playBtn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+      dispatchPlayClick(playBtn);
     }
+  });
+
+  // Any pointer/touch gesture on the player shell also wakes js-dos past
+  // the click-to-start overlay — covers mobile and users who don't think
+  // to press Space.
+  const wakePlayer = () => {
+    const btn = findPlayButton();
+    if (btn) dispatchPlayClick(btn);
+  };
+  ["pointerdown", "touchstart"].forEach(evt => {
+    dom.playerShell?.addEventListener(evt, wakePlayer, { passive: true });
   });
 }
 
