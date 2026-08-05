@@ -1,84 +1,93 @@
 # C:\PLAY
 
-A static, no-backend DOS web player built with [js-dos](https://js-dos.com/).
+A client-side DOS game player that runs `.jsdos` and `.zip` bundles in the browser, built to make js-dos approachable through a focused retro interface.
+
+## Overview
+
+C:\PLAY removes the need to install and configure a local DOS emulator for compatible game bundles. I built the player UI, bundle-loading paths, browser-based save management, searchable game library, and static deployment pipeline around [js-dos](https://js-dos.com/).
+
+The application has no custom backend. Emulation and local-file handling stay in the browser, while the game catalog and remote bundles are fetched directly from their configured sources.
 
 ## Features
 
-- Run DOS games in-browser with no local emulator install.
-- Bring-your-own bundle support (`.jsdos` / `.zip`).
-- Paste-and-load support for direct URLs and GitHub links (blob/raw/repo), with cloud share-link normalization for Google Drive/Dropbox/OneDrive.
-- Expanded curated game library with categories, year metadata, quick filters, sorting, and random one-click play for instant sessions.
-- Per-game source links plus one-click launch badges so users can immediately see what is runnable in-browser.
-- Saved settings (CPU cycles, memory, sound, and theme tint) via `localStorage`.
-- Retro-inspired UI with modern layout and fullscreen mode.
+- Loads local `.jsdos` and `.zip` files through file selection or drag and drop.
+- Launches remote bundles from direct URLs, GitHub links, and normalized Google Drive, Dropbox, or OneDrive share links.
+- Saves, restores, previews, and deletes game states in the browser.
+- Browses an external catalog with search, genre/decade/license/status filters, sorting, pagination, and random play.
+- Supports fullscreen play, sound control, CPU-cycle and memory settings, and three interface tints.
+- Provides both visual and DOS-command-inspired library navigation.
 
-## Run locally
+## Technical Highlights
 
-Because browsers block module scripts from `file://`, use a local static server:
+- **Client-only emulation:** the UI initializes js-dos with a generated DOSBox configuration. CPU cycles, memory, and sound settings are validated, persisted in `localStorage`, and applied on launch.
+- **Local persistence:** save-state bytes and optional canvas thumbnails are stored in IndexedDB. State conversion handles `ArrayBuffer`, typed-array, and array-shaped responses from the emulator API.
+- **Resource lifecycle management:** starting or stopping a game exits the active emulator with a timeout, revokes local object URLs, clears the player, and closes tracked audio contexts to avoid leaking browser resources across sessions.
+- **URL adaptation:** GitHub blob URLs become raw-content URLs, repository URLs resolve through the GitHub API to branch archives, and supported cloud-share URLs are rewritten as download links. Remote loading still depends on the host's CORS, authentication, and archive behavior.
+- **Catalog isolation:** the standalone library normalizes external JSON entries before rendering and communicates with the embedded player through `postMessage`; direct navigation falls back to query-string launch URLs.
+- **Defensive UI behavior:** loading overlays have a timeout, image failures use generated placeholders, library-fetch failures render an offline state, and user-controlled text is assigned through safe DOM APIs or escaped before HTML insertion.
+- **Static publishing automation:** GitHub Actions runs a dependency-free Node.js generator, producing one metadata-rich page per catalog entry and rebuilding the sitemap before deploying the repository to GitHub Pages.
 
-```bash
-python3 -m http.server 4173
+## Architecture
+
+```mermaid
+flowchart LR
+    User[Browser user] --> UI[Player UI<br/>index.html + app.js]
+    File[Local bundle] -->|Object URL| UI
+    URL[Remote bundle URL] -->|Normalize| UI
+    UI --> DOS[js-dos / WebAssembly emulator]
+    UI <--> Storage[localStorage settings<br/>IndexedDB saves]
+    UI <--> Library[Library UI<br/>library/]
+    Library --> Catalog[External library.json]
+    CI[GitHub Actions] --> Generator[Static page generator]
+    Catalog --> Generator
+    Generator --> Pages[Game pages + sitemap]
+    Pages --> Deploy[GitHub Pages]
 ```
 
-Open `http://localhost:4173`.
+The main page owns emulator state and persistence. The library can run as an iframe inside that page or as a standalone route; in both cases it passes a selected bundle back to the player. Catalog data and game bundles are external dependencies, so the core interface remains static but catalog-backed features require network access.
 
-## Do users need to download first?
+## Tech Stack
 
-Usually **no**. If users paste a compatible direct URL (or a supported GitHub/cloud share link), C:\PLAY starts it directly in the browser.
+- HTML5 and CSS3
+- Vanilla JavaScript using ES modules and browser storage APIs
+- [js-dos](https://js-dos.com/) / DOSBox WebAssembly runtime
+- Node.js for static game-page and sitemap generation
+- GitHub Actions and GitHub Pages
+- Google Analytics 4
 
-Users only need to download manually when a host blocks browser fetches (CORS/auth/interstitial pages), then they can use local upload.
+## Getting Started
 
-## Where to find legal shareware/freeware DOS titles
-
-Good sources to start from:
-
-- **DOS Games Archive** (https://www.dosgamesarchive.com/) — focused on free DOS games.
-- **ClassicReload** (https://classicreload.com/) — useful for discovering titles and metadata, then verifying original license/distribution rights.
-- **Internet Archive: Software Library (MS-DOS)** (https://archive.org/details/softwarelibrary_msdos_games) — large catalog, but always verify redistribution rights per title.
-- **GOG/Steam “Classic” pages** — not freeware, but useful to identify which games are still commercially sold (avoid bundling these).
-
-Tips for safe inclusion:
-
-- Prefer games explicitly labeled **freeware**, **shareware**, or with a clear redistribution statement.
-- Keep a small `licenses.md` (or JSON manifest) listing each demo game and source URL/license note.
-- When uncertain, do not bundle: let users supply their own files.
-
-## Notes
-
-- This project is intentionally backend-free: files are loaded directly in the browser.
-- User-provided bundles are never uploaded.
-- Some remote links may fail because of CORS, virus-scan interstitials, auth gates, or unexpected archive structure.
-- Legal distribution of games is your responsibility; the demos should only point to content you are allowed to redistribute.
-
-## Fully automated legal library pipeline
-
-This repo now includes a bot that can scrape legal freeware/shareware metadata, build `.jsdos` bundles, publish them to your bundle repo, and regenerate `library.json`.
-
-### Files added
-
-- `tools/library-bot/` — scraper + bundler + library generator.
-- `.github/workflows/library-bot.yml` — scheduled/dispatch automation.
-- `library.json` — runtime game catalog loaded by `app.js`.
-
-### One-time GitHub setup
-
-1. Keep this repo public (C:\PLAY app).
-2. Keep `YAL-PJ/dos-freeware-games-library` public (bundle storage repo).
-3. Add a secret in this repo: `DOS_LIBRARY_TOKEN` (fine-grained PAT with `contents:write` on `dos-freeware-games-library`).
-4. Run **Actions → Library Bot → Run workflow** once.
-
-### Local bot run
+Requirements: a modern browser, Python 3 for the local static server, and network access to js-dos. Catalog browsing also requires access to the configured external `library.json`.
 
 ```bash
-npm --prefix tools/library-bot install
-npm --prefix tools/library-bot run run
+git clone https://github.com/yal-pj/CPlay.git
+cd CPlay
+python -m http.server 4173
 ```
 
-Optional env vars:
+Open `http://localhost:4173`. Loading the files through `file://` is not supported because the application uses an ES module.
 
-- `CPLAY_LIBRARY_REPO_PATH=/path/to/local/clone/of/dos-freeware-games-library`
-- `CPLAY_BUNDLE_BASE_URL=https://raw.githubusercontent.com/YAL-PJ/dos-freeware-games-library/main/bundles`
+No dependency installation or build step is required for local use. To exercise the deployment generator separately, run:
 
-### Runtime integration
+```bash
+node scripts/build-game-pages.js
+```
 
-`app.js` now automatically fetches `./library.json` on startup and merges it with built-in curated games.
+That command requires network access and writes generated `games/` pages plus `sitemap.xml`; it is normally run by the deployment workflow.
+
+## Demo
+
+Live site: [playdosgames.xyz](https://playdosgames.xyz/)
+
+[![C:\PLAY browser interface](assets/og-preview.png)](https://playdosgames.xyz/)
+
+## Project Status
+
+**Active.** The player, external-catalog browser, save-state flow, static metadata generator, and GitHub Pages deployment are implemented. The repository currently has no automated test suite.
+
+## What I Learned
+
+- Browser-only architecture simplifies deployment and keeps local bundle data off an application server, but shifts reliability constraints to CORS policies, third-party URLs, and browser storage.
+- Emulator integrations need explicit cleanup. Stopping runtimes, revoking object URLs, and closing audio contexts matters when users launch several games in one session.
+- A remote catalog benefits from a normalization boundary: converting inconsistent source fields once keeps filtering, rendering, and launch behavior predictable.
+- Static generation can add crawlable, game-specific metadata to a client-rendered application without introducing a long-running backend.
