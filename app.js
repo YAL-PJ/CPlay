@@ -126,38 +126,13 @@ function setStatus(message, type = "ok") { if (!dom.statusText) return; dom.stat
 function handleExitStatus(err) { const isExit = err && (err.name === "ExitStatus" || (err.message && err.message.includes("ExitStatus"))); return !!(isExit && (err.status === 0 || !err.status)); }
 function showEmptyState(visible) { if (dom.emptyState) dom.emptyState.style.display = visible ? "" : "none"; }
 let _bootDismissTimer = null;
-let _bootFrameRaf = null;
 let _bootPlayObserver = null;
 function hideLoading() {
   if (_bootDismissTimer) { clearTimeout(_bootDismissTimer); _bootDismissTimer = null; }
-  if (_bootFrameRaf) { cancelAnimationFrame(_bootFrameRaf); _bootFrameRaf = null; }
   if (_bootPlayObserver) { _bootPlayObserver.disconnect(); _bootPlayObserver = null; }
   document.getElementById("loadingOverlay")?.remove();
 }
 function showLoading(message) { hideLoading(); const overlay = document.createElement("div"); overlay.className = "loading-overlay"; overlay.id = "loadingOverlay"; overlay.innerHTML = '<div class="spinner"></div>'; const p = document.createElement("p"); p.textContent = message; overlay.appendChild(p); dom.playerShell.appendChild(overlay); }
-
-// Detect whether the js-dos canvas has actually painted a non-black frame.
-function canvasHasPainted(canvas) {
-  try {
-    if (!canvas || !canvas.width || !canvas.height) return false;
-    const gl = canvas.getContext("webgl2") || canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
-    if (gl) {
-      const w = Math.min(canvas.width, 32), h = Math.min(canvas.height, 32);
-      const px = new Uint8Array(w * h * 4);
-      gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
-      for (let i = 0; i < px.length; i += 4) if (px[i] | px[i + 1] | px[i + 2]) return true;
-      return false;
-    }
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return true; // unknown context — assume painted to avoid hanging overlay
-    const w = Math.min(canvas.width, 32), h = Math.min(canvas.height, 32);
-    const data = ctx.getImageData(0, 0, w, h).data;
-    for (let i = 0; i < data.length; i += 4) if (data[i] | data[i + 1] | data[i + 2]) return true;
-    return false;
-  } catch {
-    return true; // tainted / cross-origin — don't block dismissal
-  }
-}
 
 function dispatchPlayClick(el) {
   if (!el) return;
@@ -202,18 +177,20 @@ function showBootingOverlay() {
   if (p) p.textContent = "Game booting…";
   // Try to auto-start past the js-dos click-to-start overlay.
   watchForPlayButton();
-  // Keep the spinner up until the canvas actually paints a frame, with a
-  // hard 15s cap so a busted bundle can't strand the overlay forever.
-  const startedAt = performance.now();
-  const HARD_CAP_MS = 15000;
-  const tick = () => {
-    _bootFrameRaf = null;
-    const canvas = dom.playerHost?.querySelector("canvas");
-    if (canvas && canvasHasPainted(canvas)) { hideLoading(); return; }
-    if (performance.now() - startedAt > HARD_CAP_MS) { hideLoading(); return; }
-    _bootFrameRaf = requestAnimationFrame(tick);
-  };
-  _bootFrameRaf = requestAnimationFrame(tick);
+  // The overlay is dismissed by the first emulator frame (see onDosEvent).
+  // Never touch the js-dos canvas here: calling getContext() on it claims the
+  // canvas for a different context type and js-dos then fails to render.
+  _bootDismissTimer = setTimeout(hideLoading, 15000);
+}
+
+// js-dos lifecycle hook: once the emulator is up, hide the boot overlay on
+// the first rendered frame.
+function onDosEvent(event, ci) {
+  if (event !== "ci-ready" || !ci) return;
+  try {
+    let seen = false;
+    ci.events().onFrame(() => { if (seen) return; seen = true; hideLoading(); });
+  } catch { hideLoading(); }
 }
 function showGameCrashScreen(message) { const existing = document.getElementById("gameCrashOverlay"); if (existing) existing.remove(); const overlay = document.createElement("div"); overlay.id = "gameCrashOverlay"; overlay.className = "game-crash-overlay"; const box = document.createElement("div"); box.className = "crash-box"; const title = document.createElement("p"); title.className = "crash-title"; title.textContent = "⚠ GAME ERROR"; const msg = document.createElement("p"); msg.className = "crash-msg"; msg.textContent = message; const btn = document.createElement("button"); btn.className = "crash-dismiss ghost-btn"; btn.textContent = "Dismiss"; btn.addEventListener("click", () => overlay.remove()); box.append(title, msg, btn); overlay.appendChild(box); dom.playerShell?.appendChild(overlay); }
 function updateUI() { if (dom.stopBtn) dom.stopBtn.hidden = !state.isRunning; if (dom.saveBtn) dom.saveBtn.hidden = !state.isRunning; showEmptyState(!state.isRunning && !state.ci); }
@@ -312,7 +289,7 @@ async function startDos(bundleUrl) {
     await stopCurrent();
     showEmptyState(false); showLoading("Initializing System..."); setStatus("Booting...", "");
     if (window.emulators) window.emulators.pathPrefix = "https://v8.js-dos.com/latest/emulators/";
-    const result = window.Dos(dom.playerHost, { url: bundleUrl, dosboxConf: buildDosboxConf(), kiosk: !isMobile(), autoStart: true });
+    const result = window.Dos(dom.playerHost, { url: bundleUrl, dosboxConf: buildDosboxConf(), kiosk: !isMobile(), autoStart: true, onEvent: onDosEvent });
     const ci = (result instanceof Promise) ? await result : result;
     if (!ci) throw new Error("Dos initialization returned null");
     state.ci = ci; state.isRunning = true; state.currentBundle = bundleUrl; updateUI();
